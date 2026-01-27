@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2, Send } from 'lucide-react';
 import { MobileHeader } from './MobileHeader';
 import { getChatbotResponse } from '@/lib/gemini';
 
@@ -10,11 +10,18 @@ interface ChatbotViewProps {
 }
 
 export function ChatbotView({ onBack }: ChatbotViewProps) {
-  const [chatMessages, setChatMessages] = useState<Array<{ id: string; text: string; isBot: boolean }>>([
-    { id: '1', text: 'Hello! I\'m your FBLA assistant. How can I help you today?', isBot: true }
-  ]);
+  const [chatMessages, setChatMessages] = useState<Array<{ id: string; text: string; isBot: boolean }>>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isChatLoading) return;
@@ -31,12 +38,10 @@ export function ChatbotView({ onBack }: ChatbotViewProps) {
     setIsChatLoading(true);
 
     try {
-      const conversationHistory = chatMessages
-        .filter(msg => msg.id !== '1')
-        .map(msg => ({
-          role: msg.isBot ? ('assistant' as const) : ('user' as const),
-          content: msg.text,
-        }));
+      const conversationHistory = chatMessages.map(msg => ({
+        role: msg.isBot ? ('assistant' as const) : ('user' as const),
+        content: msg.text,
+      }));
 
       const botResponse = await getChatbotResponse(userMessage, conversationHistory);
 
@@ -51,7 +56,7 @@ export function ChatbotView({ onBack }: ChatbotViewProps) {
       console.error('Error getting chatbot response:', error);
       const errorMessage = {
         id: (Date.now() + 1).toString(),
-        text: 'I apologize, but I encountered an error. Please try again or check your API configuration.',
+        text: 'I apologize, but I encountered an error. Please try again.',
         isBot: true,
       };
       setChatMessages(prev => [...prev, errorMessage]);
@@ -60,104 +65,108 @@ export function ChatbotView({ onBack }: ChatbotViewProps) {
     }
   };
 
+  const suggestedQuestions = [
+    'What is FBLA?',
+    'How do I prepare for competition?',
+    'Explain common business topics',
+    'Tips for public speaking',
+  ];
+
   return (
     <div className="absolute inset-0 bg-background flex flex-col">
       <MobileHeader
         title="FBLA Assistant"
-        subtitle="AI-Powered Help"
         onBack={onBack}
-        rightAction={
-          <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-accent-foreground" />
-          </div>
-        }
       />
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-5 momentum-scroll bg-muted/30">
-        {chatMessages.map((message, index) => (
-          <div
-            key={message.id}
-            className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
-          >
-            {message.isBot && (
-              <div className="flex-shrink-0 mr-3">
-                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 text-primary-foreground" />
+      {/* Chat Area */}
+      <div className="flex-1 overflow-y-auto momentum-scroll">
+        {/* Welcome Card - shown when no messages */}
+        {chatMessages.length === 0 && (
+          <div className="px-4 py-6">
+            <div className="bg-card border border-border rounded-xl p-6 mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="h-6 w-6 text-accent-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">FBLA AI Assistant</h2>
+                  <p className="text-muted-foreground text-sm">
+                    Ask me anything about FBLA
+                  </p>
                 </div>
               </div>
-            )}
-            <div
-              className={`max-w-[80%] ${
-                message.isBot
-                  ? 'bg-card border border-border shadow-sm'
-                  : 'bg-primary'
-              } rounded-2xl px-5 py-4`}
-            >
-              {message.isBot && index === 0 && (
-                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
-                  <span className="text-xs font-semibold text-primary">FBLA AI Assistant</span>
-                  <span className="text-xs text-accent">● Online</span>
-                </div>
-              )}
-              <p className={`whitespace-pre-wrap text-sm leading-relaxed ${
-                message.isBot ? 'text-foreground' : 'text-primary-foreground'
-              }`}>
-                {message.text}
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                I can help you with competition preparation, business concepts, study tips, and more.
               </p>
             </div>
-          </div>
-        ))}
-        
-        {isChatLoading && (
-          <div className="flex justify-start">
-            <div className="flex-shrink-0 mr-3">
-              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
-                <MessageSquare className="h-4 w-4 text-primary-foreground" />
-              </div>
-            </div>
-            <div className="bg-card border border-border shadow-sm rounded-2xl px-5 py-4">
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Thinking...</span>
+
+            {/* Suggested Questions */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground px-1">Suggested questions:</p>
+              <div className="space-y-2">
+                {suggestedQuestions.map((question) => (
+                  <button
+                    key={question}
+                    onClick={() => setChatInput(question)}
+                    className="w-full text-left px-4 py-3 bg-card border border-border rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    {question}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Suggested Questions (show when only welcome message) */}
-      {chatMessages.length === 1 && (
-        <div className="px-4 py-3 bg-background border-t border-border">
-          <p className="text-xs text-muted-foreground mb-3">Try asking:</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              'What is FBLA?',
-              'How do I prepare for competition?',
-              'Explain Business Law topics',
-            ].map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => {
-                  setChatInput(suggestion);
-                }}
-                className="px-3 py-2 text-xs bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors"
+        {/* Messages */}
+        {chatMessages.length > 0 && (
+          <div className="px-4 py-6 space-y-4">
+            {chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
               >
-                {suggestion}
-              </button>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                    message.isBot
+                      ? 'bg-card border border-border'
+                      : 'bg-primary text-primary-foreground'
+                  }`}
+                >
+                  <p className={`whitespace-pre-wrap text-sm leading-relaxed ${
+                    message.isBot ? 'text-foreground' : 'text-primary-foreground'
+                  }`}>
+                    {message.text}
+                  </p>
+                </div>
+              </div>
             ))}
+            
+            {isChatLoading && (
+              <div className="flex justify-start">
+                <div className="bg-card border border-border rounded-2xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Input Area */}
       <div 
-        className="border-t border-border bg-background px-4 py-4"
+        className="border-t border-border bg-card px-4 py-4"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
       >
         <div className="flex gap-3">
           <Input
-            placeholder="Ask about FBLA..."
+            placeholder="Ask a question..."
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyPress={(e) => {
@@ -165,18 +174,18 @@ export function ChatbotView({ onBack }: ChatbotViewProps) {
                 handleSendMessage();
               }
             }}
-            className="h-14 text-base flex-1 rounded-xl px-4"
+            className="h-12 text-base flex-1 rounded-lg px-4"
           />
           <Button
             size="icon"
-            className="h-14 w-14 bg-accent hover:bg-accent/90 text-accent-foreground flex-shrink-0 rounded-xl shadow-lg"
+            className="h-12 w-12 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 rounded-lg"
             onClick={handleSendMessage}
             disabled={!chatInput.trim() || isChatLoading}
           >
             {isChatLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <MessageSquare className="h-5 w-5" />
+              <Send className="h-5 w-5" />
             )}
           </Button>
         </div>
