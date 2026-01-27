@@ -1,5 +1,54 @@
 {
   "appId": "com.engage.fbla",
   "appName": "FBLA Engage",
-  "webDir": "build"
+  "webDir": "build",
+  "server": {
+    "android": {
+      "allowMixedContent": true,
+      "cleartext": true
+    },
+    "ios": {
+      "allowMixedContent": true,
+      "cleartext": true
+    }
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": true,
+    "backgroundColor": "#ffffff"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#ffffff",
+    "appendUserAgent": "FBLA Engage",
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "hardwareAccelerated": true,
+    "navigationBar": {
+      "color": "#0a2e4e",
+      "style": "dark"
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a2e4e",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#0a2e4e",
+      "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    }
+  }
 }

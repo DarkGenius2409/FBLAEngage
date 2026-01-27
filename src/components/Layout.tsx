@@ -25,10 +25,10 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mobile-viewport-fix">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="bg-primary text-primary-foreground border-b sticky top-0 z-50 safe-area-top">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between" style={{ paddingTop: 'max(0.875rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
             <div className="w-8 h-8 bg-accent rounded-md flex items-center justify-center">
               <span className="text-accent-foreground text-sm font-semibold">FB</span>
@@ -58,12 +58,12 @@ export default function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="pb-20">
+      <main className="pb-20 momentum-scroll">
         <Outlet />
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t z-40">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t z-40 safe-area-bottom" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
         <div className="container mx-auto px-2">
           <div className="flex items-center justify-around">
             <Button

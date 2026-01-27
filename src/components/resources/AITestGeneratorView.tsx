@@ -67,10 +67,12 @@ export function AITestGeneratorView({ onBack }: AITestGeneratorViewProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      <MobileHeader title="AI Test Generator" onBack={onBack} />
+    <div className="fixed inset-0 z-50 bg-background flex flex-col fullscreen-safe">
+      <div className="safe-area-top">
+        <MobileHeader title="AI Test Generator" onBack={onBack} />
+      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6 momentum-scroll">
         {isGenerating ? (
           <LoadingSpinner
             title="Generating Test Questions"

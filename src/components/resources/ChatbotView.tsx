@@ -61,19 +61,21 @@ export function ChatbotView({ onBack }: ChatbotViewProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      <MobileHeader
-        title="FBLA Assistant"
-        subtitle="Ask me anything about FBLA"
-        onBack={onBack}
-        rightAction={
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
-          </div>
-        }
-      />
+    <div className="fixed inset-0 z-50 bg-background flex flex-col fullscreen-safe">
+      <div className="safe-area-top">
+        <MobileHeader
+          title="FBLA Assistant"
+          subtitle="Ask me anything about FBLA"
+          onBack={onBack}
+          rightAction={
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+            </div>
+          }
+        />
+      </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 momentum-scroll">
         {chatMessages.map(message => (
           <div
             key={message.id}
@@ -99,7 +101,7 @@ export function ChatbotView({ onBack }: ChatbotViewProps) {
         )}
       </div>
 
-      <div className="border-t border-border bg-background p-4">
+      <div className="border-t border-border bg-background p-4 safe-area-bottom">
         <div className="flex gap-2">
           <Input
             placeholder="Ask a question..."

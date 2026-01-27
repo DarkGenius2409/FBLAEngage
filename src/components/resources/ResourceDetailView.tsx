@@ -33,10 +33,12 @@ export function ResourceDetailView({ resource, onBack, onDownload }: ResourceDet
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      <MobileHeader title="Resource Details" onBack={onBack} />
+    <div className="fixed inset-0 z-50 bg-background flex flex-col fullscreen-safe">
+      <div className="safe-area-top">
+        <MobileHeader title="Resource Details" onBack={onBack} />
+      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6 momentum-scroll">
         <div className="space-y-4">
           <div>
             <Badge className="mb-3 text-xs">{resource.type.toUpperCase()}</Badge>
@@ -78,9 +80,9 @@ export function ResourceDetailView({ resource, onBack, onDownload }: ResourceDet
         </div>
       </div>
 
-      <div className="border-t border-border bg-background p-4 space-y-2">
+      <div className="border-t border-border bg-background p-4 space-y-2 safe-area-bottom">
         <Button
-          className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
+          className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 touch-manipulation"
           onClick={onDownload}
         >
           <Download className="h-5 w-5 mr-2" />
@@ -89,7 +91,7 @@ export function ResourceDetailView({ resource, onBack, onDownload }: ResourceDet
         {resource.type === 'link' && resource.url && (
           <Button
             variant="outline"
-            className="w-full h-12 text-base"
+            className="w-full h-12 text-base touch-manipulation"
             onClick={() => window.open(resource.url!, '_blank')}
           >
             <ExternalLink className="h-5 w-5 mr-2" />

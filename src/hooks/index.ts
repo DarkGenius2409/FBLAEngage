@@ -11,3 +11,4 @@ export * from './useEvents';
 export * from './useChats';
 export * from './useResources';
 export * from './useNotifications';
+export * from './useCapacitor';

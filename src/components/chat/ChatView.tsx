@@ -46,9 +46,9 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col bg-white">
+    <div className="h-[calc(100vh-140px)] flex flex-col bg-white mobile-viewport-fix">
       {/* Chat Header */}
-      <div className="border-b border-border p-4 flex items-center justify-between bg-white">
+      <div className="border-b border-border p-4 flex items-center justify-between bg-white safe-area-top">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft className="h-5 w-5" />
@@ -75,7 +75,7 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 momentum-scroll">
         {messages.map((message) => {
           const isOwn = message.author_id === currentUserId;
           return (
@@ -103,7 +103,7 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-border p-4 bg-white">
+      <div className="border-t border-border p-4 bg-white safe-area-bottom">
         <div className="flex items-center gap-2">
           <Input
             placeholder="Type a message..."
