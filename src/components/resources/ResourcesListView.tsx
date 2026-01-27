@@ -1,7 +1,6 @@
 import { MobileHeader } from './MobileHeader';
 import { SearchBar } from './SearchBar';
 import { ResourceCard } from './ResourceCard';
-import { LoadingSpinner } from './LoadingSpinner';
 import { EmptyState } from './EmptyState';
 import { Loader2, FileText } from 'lucide-react';
 import type { ResourceWithCategory } from '@/lib/models';
@@ -37,14 +36,12 @@ export function ResourcesListView({
   });
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col fullscreen-safe">
-      <div className="safe-area-top">
-        <MobileHeader
-          title={eventName}
-          subtitle={event ? `${event.category} • Grades ${event.eligibleGrades}` : undefined}
-          onBack={onBack}
-        />
-      </div>
+    <div className="absolute inset-0 bg-background flex flex-col">
+      <MobileHeader
+        title={eventName}
+        subtitle={event ? `${event.category} • Grades ${event.eligibleGrades}` : undefined}
+        onBack={onBack}
+      />
 
       <div className="px-4 pt-4 pb-2 border-b border-border bg-background">
         <SearchBar

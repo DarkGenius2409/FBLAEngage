@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Student, StudentInsert, StudentUpdate, StudentWithRelations } from '@/lib/models';
+import type { Student, StudentUpdate, StudentWithRelations } from '@/lib/models';
 
 export function useStudent(studentId: string | null) {
   const [student, setStudent] = useState<StudentWithRelations | null>(null);

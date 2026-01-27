@@ -41,6 +41,7 @@
             "cmdk": "^1.1.1",
             "date-fns": "^3.6.0",
             "embla-carousel-react": "^8.6.0",
+            "framer-motion": "^12.29.2",
             "input-otp": "^1.4.2",
             "lucide-react": "^0.487.0",
             "next-themes": "^0.4.6",
@@ -58,7 +59,10 @@
       "devDependencies": {
             "@capacitor/cli": "^8.0.1",
             "@types/node": "^20.10.0",
+            "@types/react": "^19.2.9",
+            "@types/react-dom": "^19.2.3",
             "@vitejs/plugin-react-swc": "^3.10.2",
+            "typescript": "^5.9.3",
             "vite": "6.3.5"
       },
       "scripts": {

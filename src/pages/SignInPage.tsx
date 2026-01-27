@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { InlineSpinner } from '@/components/ui/native-spinner';
 
 export default function SignInPage() {
   const navigate = useNavigate();
@@ -179,10 +180,15 @@ export default function SignInPage() {
 
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full bg-primary hover:bg-primary/90 h-11 native-button"
               disabled={loading}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <InlineSpinner className="border-primary-foreground" />
+                  Signing in...
+                </span>
+              ) : 'Sign In'}
             </Button>
           </form>
 

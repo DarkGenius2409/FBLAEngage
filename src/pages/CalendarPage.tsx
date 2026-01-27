@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { useEvents } from '@/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 import { parseISO } from 'date-fns';
@@ -10,6 +9,7 @@ import {
   CalendarHeader,
   Legend,
 } from '@/components/calendar';
+import { Spinner } from '@/components/ui/native-spinner';
 
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -37,8 +37,9 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-6xl flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-6 max-w-6xl flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Spinner size="lg" />
+        <p className="text-sm text-muted-foreground">Loading events...</p>
       </div>
     );
   }

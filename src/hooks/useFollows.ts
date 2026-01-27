@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { StudentFollow, StudentFollowInsert } from '@/lib/models';
+import type { StudentFollowInsert } from '@/lib/models';
 
 export function useFollows(studentId: string | null) {
   const [following, setFollowing] = useState<string[]>([]);

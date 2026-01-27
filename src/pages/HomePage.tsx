@@ -1,10 +1,9 @@
-import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePosts, useStudent } from '@/hooks';
 import { PostCard, CreatePostForm } from '@/components/posts';
+import { Spinner } from '@/components/ui/native-spinner';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -22,8 +21,9 @@ export default function HomePage() {
 
   if (postsLoading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-2xl flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-6 max-w-2xl flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Spinner size="lg" />
+        <p className="text-sm text-muted-foreground">Loading feed...</p>
       </div>
     );
   }

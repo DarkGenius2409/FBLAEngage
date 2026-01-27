@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type {
-  Resource,
-  ResourceInsert,
   ResourceWithCategory,
   ResourceCategory,
 } from '@/lib/models';

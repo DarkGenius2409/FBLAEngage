@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -39,7 +39,7 @@ export default function VideoMeetingPage({ onClose }: VideoMeetingPageProps) {
   ];
 
   return (
-    <div className="h-[calc(100vh-140px)] bg-slate-900 flex flex-col">
+    <div className="absolute inset-0 bg-slate-900 flex flex-col">
       {/* Video Grid */}
       <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Main Video */}

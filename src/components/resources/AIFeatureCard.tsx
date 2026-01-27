@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Sparkles, MessageSquare } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 interface AIFeatureCardProps {
   title: string;

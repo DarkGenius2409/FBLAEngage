@@ -15,11 +15,11 @@
   "ios": {
     "contentInset": "automatic",
     "scrollEnabled": true,
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#0a2e4e"
   },
   "android": {
     "allowMixedContent": true,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#0a2e4e",
     "appendUserAgent": "FBLA Engage",
     "captureInput": true,
     "webContentsDebuggingEnabled": false,
@@ -41,9 +41,9 @@
       "splashImmersive": true
     },
     "StatusBar": {
-      "style": "dark",
+      "style": "light",
       "backgroundColor": "#0a2e4e",
-      "overlaysWebView": false
+      "overlaysWebView": true
     },
     "Keyboard": {
       "resize": "body",

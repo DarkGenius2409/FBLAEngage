@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Notification, NotificationInsert, NotificationUpdate } from '@/lib/models';
+import type { Notification, NotificationInsert } from '@/lib/models';
 
 export function useNotifications(recipientId: string | null) {
   const [notifications, setNotifications] = useState<Notification[]>([]);

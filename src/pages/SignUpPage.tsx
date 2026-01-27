@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { InlineSpinner } from '@/components/ui/native-spinner';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -64,7 +65,6 @@ export default function SignUpPage() {
     if (!validateForm()) return;
 
     setLoading(true);
-    const generalError = errors.general;
     setErrors({});
 
     try {
@@ -93,7 +93,8 @@ export default function SignUpPage() {
   const handleChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
     if (errors[field]) {
-      setErrors({ ...errors, [field]: undefined });
+      const { [field]: _, ...rest } = errors;
+      setErrors(rest);
     }
   };
 
@@ -282,10 +283,15 @@ export default function SignUpPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90"
+                className="w-full bg-primary hover:bg-primary/90 h-11 native-button"
                 disabled={loading}
               >
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <InlineSpinner className="border-primary-foreground" />
+                    Creating account...
+                  </span>
+                ) : 'Create Account'}
               </Button>
             </form>
 

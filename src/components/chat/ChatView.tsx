@@ -46,29 +46,32 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col bg-white mobile-viewport-fix">
-      {/* Chat Header */}
-      <div className="border-b border-border p-4 flex items-center justify-between bg-white safe-area-top">
+    <div className="absolute inset-0 flex flex-col bg-background">
+      {/* Chat Header - Navy with safe area */}
+      <div 
+        className="border-b border-primary-foreground/10 p-4 flex items-center justify-between bg-primary text-primary-foreground"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+      >
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/10" onClick={onBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center">
+          <Avatar className="w-10 h-10 bg-white/20 text-primary-foreground flex items-center justify-center">
             CH
           </Avatar>
           <div>
             <h3 className="font-medium">Chat</h3>
-            <p className="text-xs text-muted-foreground">Active now</p>
+            <p className="text-xs text-primary-foreground/70">Active now</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onVideoCall}>
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/10" onClick={onVideoCall}>
             <Video className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/10">
             <Phone className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-white/10">
             <MoreVertical className="h-5 w-5" />
           </Button>
         </div>
@@ -103,7 +106,10 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-border p-4 bg-white safe-area-bottom">
+      <div 
+        className="border-t border-border p-4 bg-background"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         <div className="flex items-center gap-2">
           <Input
             placeholder="Type a message..."
@@ -118,7 +124,7 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
           />
           <Button
             size="icon"
-            className="bg-primary hover:bg-blue-800 text-primary-foreground"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
           >

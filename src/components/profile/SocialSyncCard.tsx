@@ -1,4 +1,3 @@
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Instagram, Check } from 'lucide-react';
 import { TikTokIcon } from '@/components/TikTokIcon';

@@ -18,19 +18,26 @@ export function useCapacitor() {
 
     if (native) {
       // Listen to keyboard events
-      const showListener = Keyboard.addListener('keyboardWillShow', (info) => {
-        setKeyboardVisible(true);
-        setKeyboardHeight(info.keyboardHeight);
-      });
+      let showListener: Awaited<ReturnType<typeof Keyboard.addListener>> | null = null;
+      let hideListener: Awaited<ReturnType<typeof Keyboard.addListener>> | null = null;
 
-      const hideListener = Keyboard.addListener('keyboardWillHide', () => {
-        setKeyboardVisible(false);
-        setKeyboardHeight(0);
-      });
+      const setupListeners = async () => {
+        showListener = await Keyboard.addListener('keyboardWillShow', (info) => {
+          setKeyboardVisible(true);
+          setKeyboardHeight(info.keyboardHeight);
+        });
+
+        hideListener = await Keyboard.addListener('keyboardWillHide', () => {
+          setKeyboardVisible(false);
+          setKeyboardHeight(0);
+        });
+      };
+
+      setupListeners();
 
       return () => {
-        showListener.remove();
-        hideListener.remove();
+        showListener?.remove();
+        hideListener?.remove();
       };
     }
   }, []);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Event, EventInsert, EventUpdate, EventWithRelations } from '@/lib/models';
+import type { EventInsert, EventWithRelations } from '@/lib/models';
 
 export function useEvents(level?: 'regional' | 'state' | 'national') {
   const [events, setEvents] = useState<EventWithRelations[]>([]);

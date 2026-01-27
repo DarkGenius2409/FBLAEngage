@@ -1,6 +1,73 @@
-/* Capacitor, iOS, and Android specific styles */
+/* ============================================================================
+   Native Mobile UI Styles for iOS and Android
+   ============================================================================ */
 
-/* Safe area support for iOS notches and home indicators, Android navigation bar */
+/* ============================================================================
+   Native Spinner Animations
+   ============================================================================ */
+
+/* Universal spinner animation - smooth rotation */
+.spinner-native {
+  animation: spin-native 0.8s linear infinite;
+}
+
+@keyframes spin-native {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* iOS-style activity indicator animation */
+.native-spinner {
+  animation: ios-spinner 1s steps(8) infinite;
+}
+
+@keyframes ios-spinner {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Material/Android style spinner with dash animation */
+.material-spinner {
+  animation: material-rotate 1.4s linear infinite;
+}
+
+.material-spinner svg circle {
+  animation: material-dash 1.4s ease-in-out infinite;
+}
+
+@keyframes material-rotate {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes material-dash {
+  0% {
+    stroke-dasharray: 1, 62.83;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 31.416, 31.416;
+    stroke-dashoffset: -12.566;
+  }
+  100% {
+    stroke-dasharray: 1, 62.83;
+    stroke-dashoffset: -62.83;
+  }
+}
+
+/* Pulse animation for loading states */
+.pulse-native {
+  animation: pulse-native 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-native {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============================================================================
+   Safe Area Support (iOS Notches, Android Navigation)
+   ============================================================================ */
+
 .safe-area {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -24,16 +91,14 @@
   padding-right: env(safe-area-inset-right);
 }
 
+/* ============================================================================
+   Native Touch Interactions
+   ============================================================================ */
+
 /* Prevent iOS bounce/overscroll */
 .no-bounce {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-}
-
-/* Fix for iOS viewport height issues */
-.ios-viewport-fix {
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
 }
 
 /* Touch-friendly interactions */
@@ -42,22 +107,293 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent text selection on long press (except inputs) */
+/* Prevent text selection on long press */
 .no-select {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
 }
 
-/* Allow text selection in specific elements */
+/* Allow text selection */
 .select-text {
   -webkit-user-select: auto;
   user-select: auto;
 }
 
-/* iOS-specific input fixes */
+/* ============================================================================
+   Native Button Styles
+   ============================================================================ */
+
+.native-button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+  user-select: none;
+}
+
+.native-button:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* iOS-style button press effect */
+.ios-button-press:active {
+  opacity: 0.7;
+}
+
+/* Android ripple effect placeholder */
+.android-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Native Card Styles
+   ============================================================================ */
+
+.native-card {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.native-card-elevated {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* iOS-style grouped list card */
+.ios-grouped-card {
+  background: var(--card);
+  border-radius: 10px;
+  margin: 0 16px;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Native List Styles
+   ============================================================================ */
+
+.native-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  min-height: 44px;
+  background: var(--card);
+  border-bottom: 0.5px solid var(--border);
+  transition: background-color 0.15s ease;
+}
+
+.native-list-item:active {
+  background-color: var(--muted);
+}
+
+.native-list-item:last-child {
+  border-bottom: none;
+}
+
+/* ============================================================================
+   Native Input Styles
+   ============================================================================ */
+
+.native-input {
+  height: 44px;
+  padding: 0 16px;
+  background: var(--secondary);
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background-color 0.15s ease;
+}
+
+.native-input:focus {
+  outline: none;
+  background: var(--muted);
+}
+
+.native-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* iOS-style search bar */
+.native-search {
+  height: 36px;
+  padding: 0 12px 0 36px;
+  background: var(--secondary);
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ============================================================================
+   Native Navigation Styles
+   ============================================================================ */
+
+/* iOS-style navigation bar */
+.native-navbar {
+  height: 44px;
+  background: var(--card);
+  border-bottom: 0.5px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Native tab bar */
+.native-tabbar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--card);
+  border-top: 0.5px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.native-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  min-width: 64px;
+  gap: 2px;
+  color: var(--muted-foreground);
+  transition: color 0.15s ease;
+}
+
+.native-tab-item.active {
+  color: var(--primary);
+}
+
+.native-tab-item span {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   Native Header Styles
+   ============================================================================ */
+
+.native-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.native-header-title {
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.native-header-large-title {
+  font-size: 34px;
+  font-weight: 700;
+  padding: 0 16px 8px;
+}
+
+/* ============================================================================
+   Native Segment Control (iOS)
+   ============================================================================ */
+
+.native-segment-control {
+  display: flex;
+  background: var(--secondary);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.native-segment-button {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--foreground);
+  transition: all 0.15s ease;
+}
+
+.native-segment-button.active {
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================================
+   Native Modal/Sheet Styles
+   ============================================================================ */
+
+.native-sheet {
+  background: var(--card);
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+}
+
+.native-sheet-handle {
+  width: 36px;
+  height: 5px;
+  background: var(--muted-foreground);
+  opacity: 0.3;
+  border-radius: 3px;
+  margin: 8px auto;
+}
+
+/* ============================================================================
+   Native Skeleton Loading
+   ============================================================================ */
+
+.native-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--secondary) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================================================
+   Native Badge Styles
+   ============================================================================ */
+
+.native-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9px;
+}
+
+/* ============================================================================
+   iOS-specific Input Fixes
+   ============================================================================ */
+
 @supports (-webkit-touch-callout: none) {
-  /* Prevent zoom on input focus in iOS Safari */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -70,7 +406,6 @@
     font-size: 16px !important;
   }
 
-  /* Fix for iOS input shadow */
   input,
   textarea,
   select {
@@ -80,72 +415,40 @@
   }
 }
 
-/* Fix for iOS fixed positioning issues */
+/* ============================================================================
+   Fixed Positioning Fixes
+   ============================================================================ */
+
 .fixed-ios {
   position: fixed;
-  /* Use transform to create a new stacking context */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
 }
 
-/* Smooth scrolling for iOS */
+/* ============================================================================
+   Scrolling Optimizations
+   ============================================================================ */
+
 .smooth-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
 
-/* Prevent iOS from highlighting elements on tap */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Fix for iOS status bar spacing */
-.status-bar-spacer {
-  height: env(safe-area-inset-top);
-  background-color: var(--primary);
-}
-
-/* Bottom navigation safe area */
-.bottom-nav-safe {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-}
-
-/* Full screen safe area (for modals, etc.) */
-.fullscreen-safe {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
-/* iOS specific button styles */
-.ios-button {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-}
-
-/* Prevent iOS from showing callout menu on long press */
-.no-callout {
-  -webkit-touch-callout: none;
-}
-
-/* Fix for iOS input focus zoom */
-@media screen and (max-width: 768px) {
-  input,
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-}
-
-/* iOS scroll momentum */
 .momentum-scroll {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
 }
 
-/* Fix for iOS viewport units */
+/* ============================================================================
+   Viewport Fixes
+   ============================================================================ */
+
+.mobile-viewport-fix {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
 .vh-ios {
   height: 100vh;
   height: -webkit-fill-available;
@@ -156,27 +459,74 @@
   min-height: -webkit-fill-available;
 }
 
-/* Android-specific optimizations */
+/* ============================================================================
+   Status Bar Spacing
+   ============================================================================ */
+
+.status-bar-spacer {
+  height: env(safe-area-inset-top);
+  background-color: var(--primary);
+}
+
+.bottom-nav-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.fullscreen-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ============================================================================
+   Prevent System UI Interference
+   ============================================================================ */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-callout {
+  -webkit-touch-callout: none;
+}
+
+.no-context-menu {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============================================================================
+   Hardware Acceleration
+   ============================================================================ */
+
+.hardware-accelerated {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ============================================================================
+   Android-specific Styles
+   ============================================================================ */
+
 @supports (not (-webkit-touch-callout: none)) {
-  /* Android-specific styles (not iOS) */
-  
-  /* Android viewport height fix */
   .android-viewport-fix {
     min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for Android */
+    min-height: 100dvh;
   }
 
-  /* Android navigation bar safe area */
   .android-nav-safe {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 
-  /* Android status bar safe area */
   .android-status-safe {
     padding-top: max(0.875rem, env(safe-area-inset-top));
   }
 
-  /* Android-specific input fixes */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -186,56 +536,38 @@
   input[type="search"],
   textarea,
   select {
-    /* Prevent zoom on input focus in Android Chrome */
     font-size: 16px !important;
-    /* Remove Android input highlight */
     -webkit-tap-highlight-color: transparent;
-    /* Remove Android input outline */
     outline: none;
   }
 
-  /* Android button optimizations */
   button,
   [role="button"],
   a {
-    /* Remove Android tap highlight */
     -webkit-tap-highlight-color: transparent;
-    /* Optimize touch response */
     touch-action: manipulation;
   }
 
-  /* Android scroll optimizations */
   .android-scroll {
-    /* Smooth scrolling for Android */
     -webkit-overflow-scrolling: touch;
-    /* Prevent overscroll glow */
     overscroll-behavior: none;
-    /* Hardware acceleration */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
   }
 
-  /* Android fixed positioning fix */
   .fixed-android {
     position: fixed;
-    /* Use transform to create a new stacking context */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    /* Prevent Android from moving fixed elements */
     will-change: transform;
   }
 }
 
-/* Cross-platform optimizations (iOS and Android) */
-.mobile-viewport-fix {
-  min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height */
-  min-height: -webkit-fill-available; /* iOS fallback */
-}
+/* ============================================================================
+   Mobile Input Zoom Prevention
+   ============================================================================ */
 
-/* Android Chrome specific fixes */
 @media screen and (max-width: 768px) {
-  /* Prevent zoom on input focus for all mobile browsers */
   input,
   select,
   textarea {
@@ -243,40 +575,49 @@
   }
 }
 
-/* Android navigation bar color support */
-@media (prefers-color-scheme: dark) {
-  /* Dark mode adjustments for Android */
-  .android-dark-mode {
-    background-color: var(--background);
-    color: var(--foreground);
+/* ============================================================================
+   Native Transitions
+   ============================================================================ */
+
+.native-transition {
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.native-fade-in {
+  animation: native-fade-in 0.2s ease-out;
+}
+
+@keyframes native-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.native-slide-up {
+  animation: native-slide-up 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+@keyframes native-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Android ripple effect prevention */
-.no-ripple {
-  -webkit-tap-highlight-color: transparent;
-  tap-highlight-color: transparent;
+.native-scale-in {
+  animation: native-scale-in 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Android text selection optimization */
-.android-select {
-  -webkit-user-select: text;
-  user-select: text;
-  -webkit-touch-callout: default;
-}
-
-/* Android long press menu prevention */
-.no-context-menu {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Android hardware acceleration */
-.hardware-accelerated {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+@keyframes native-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

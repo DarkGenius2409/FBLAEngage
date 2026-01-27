@@ -13,20 +13,18 @@ import {
   Instagram,
   Check,
   ExternalLink,
-  Loader2,
 } from 'lucide-react';
 import { TikTokIcon } from '@/components/TikTokIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { useStudent, useFollows, usePosts } from '@/hooks';
+import { useStudent, useFollows } from '@/hooks';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { Spinner } from '@/components/ui/native-spinner';
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { student, loading: studentLoading, updateStudent } = useStudent(user?.id || null);
-  const { following, followers, followingCount, followersCount, isFollowing, follow, unfollow } = useFollows(user?.id || null);
-  const { posts } = usePosts(student?.school_id || null);
+  const { student, loading: studentLoading } = useStudent(user?.id || null);
+  const { following, followingCount, followersCount } = useFollows(user?.id || null);
   const [isInstagramSynced, setIsInstagramSynced] = useState(false);
   const [isTikTokSynced, setIsTikTokSynced] = useState(false);
   const [postCount, setPostCount] = useState(0);
@@ -65,8 +63,9 @@ export default function ProfilePage() {
 
   if (studentLoading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl pb-20 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-6 max-w-4xl pb-20 flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Spinner size="lg" />
+        <p className="text-sm text-muted-foreground">Loading profile...</p>
       </div>
     );
   }

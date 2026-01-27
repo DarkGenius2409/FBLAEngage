@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { Briefcase, MapPin, Settings } from 'lucide-react';
-import type { StudentWithSchool } from '@/lib/models';
+import type { StudentWithRelations } from '@/lib/models';
 
 interface ProfileHeaderProps {
-  student: StudentWithSchool;
+  student: StudentWithRelations;
 }
 
 const getInitials = (name: string) => {

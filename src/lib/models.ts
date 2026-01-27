@@ -442,7 +442,7 @@ export interface ReportUpdate {
 
 // Post with author and media
 export interface PostWithRelations extends Post {
-  author: Student;
+  author: StudentWithRelations;
   media: Media[];
 }
 
@@ -513,87 +513,110 @@ export interface Database {
         Row: School;
         Insert: SchoolInsert;
         Update: SchoolUpdate;
+        Relationships: [];
       };
       students: {
         Row: Student;
         Insert: StudentInsert;
         Update: StudentUpdate;
+        Relationships: [];
       };
       school_roles: {
         Row: SchoolRole;
         Insert: SchoolRoleInsert;
         Update: SchoolRoleUpdate;
+        Relationships: [];
       };
       events: {
         Row: Event;
         Insert: EventInsert;
         Update: EventUpdate;
+        Relationships: [];
       };
       event_registrations: {
         Row: EventRegistration;
         Insert: EventRegistrationInsert;
-        Update: never; // Composite primary key, updates not recommended
+        Update: EventRegistrationInsert;
+        Relationships: [];
       };
       posts: {
         Row: Post;
         Insert: PostInsert;
         Update: PostUpdate;
+        Relationships: [];
       };
       media: {
         Row: Media;
         Insert: MediaInsert;
         Update: MediaUpdate;
+        Relationships: [];
       };
       comments: {
         Row: Comment;
         Insert: CommentInsert;
         Update: CommentUpdate;
+        Relationships: [];
       };
       likes: {
         Row: Like;
         Insert: LikeInsert;
-        Update: never; // Composite primary key, updates not recommended
+        Update: LikeInsert;
+        Relationships: [];
       };
       student_follows: {
         Row: StudentFollow;
         Insert: StudentFollowInsert;
-        Update: never; // Composite primary key, updates not recommended
+        Update: StudentFollowInsert;
+        Relationships: [];
       };
       chats: {
         Row: Chat;
         Insert: ChatInsert;
         Update: ChatUpdate;
+        Relationships: [];
       };
       chat_participants: {
         Row: ChatParticipant;
         Insert: ChatParticipantInsert;
-        Update: never; // Composite primary key, updates not recommended
+        Update: ChatParticipantInsert;
+        Relationships: [];
       };
       messages: {
         Row: Message;
         Insert: MessageInsert;
         Update: MessageUpdate;
+        Relationships: [];
       };
       resource_categories: {
         Row: ResourceCategory;
         Insert: ResourceCategoryInsert;
         Update: ResourceCategoryUpdate;
+        Relationships: [];
       };
       resources: {
         Row: Resource;
         Insert: ResourceInsert;
         Update: ResourceUpdate;
+        Relationships: [];
       };
       notifications: {
         Row: Notification;
         Insert: NotificationInsert;
         Update: NotificationUpdate;
+        Relationships: [];
       };
       reports: {
         Row: Report;
         Insert: ReportInsert;
         Update: ReportUpdate;
+        Relationships: [];
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
     };
     Enums: {
       media_type: MediaType;
@@ -601,6 +624,9 @@ export interface Database {
       event_level: EventLevel;
       chat_type: ChatType;
       report_target_type: ReportTargetType;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }

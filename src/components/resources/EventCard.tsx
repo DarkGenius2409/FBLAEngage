@@ -1,5 +1,4 @@
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ChevronRight, FileText, DollarSign, MessageSquare } from 'lucide-react';
 import type { FBLAEvent } from '@/lib/fblaEvents';
 
