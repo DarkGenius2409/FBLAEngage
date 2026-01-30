@@ -7,11 +7,11 @@
 // ENUM TYPES
 // ============================================================================
 
-export type MediaType = 'image' | 'video' | 'document';
-export type ResourceType = 'pdf' | 'link' | 'video';
-export type EventLevel = 'regional' | 'state' | 'national';
-export type ChatType = 'direct' | 'group' | 'school';
-export type ReportTargetType = 'post' | 'comment' | 'student';
+export type MediaType = "image" | "video" | "document";
+export type ResourceType = "pdf" | "link" | "video";
+export type EventLevel = "regional" | "state" | "national";
+export type ChatType = "direct" | "group" | "school";
+export type ReportTargetType = "post" | "comment" | "student";
 
 // ============================================================================
 // JSONB TYPES
@@ -278,6 +278,8 @@ export interface StudentFollowInsert {
 export interface Chat {
   id: string;
   type: ChatType;
+  name: string | null;
+  image: string | null;
   created_by: string | null;
   created_at: string; // ISO timestamp
 }
@@ -285,12 +287,16 @@ export interface Chat {
 export interface ChatInsert {
   id?: string;
   type?: ChatType;
+  name?: string | null;
+  image?: string | null;
   created_by?: string | null;
   created_at?: string;
 }
 
 export interface ChatUpdate {
   type?: ChatType;
+  name?: string | null;
+  image?: string | null;
   created_by?: string | null;
 }
 
@@ -324,6 +330,29 @@ export interface MessageInsert {
 
 export interface MessageUpdate {
   content?: string;
+}
+
+// Chat Requests Table (DM request–accept flow)
+export interface ChatRequest {
+  id: string;
+  requester_id: string;
+  recipient_id: string;
+  status: "pending" | "accepted" | "declined";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatRequestInsert {
+  id?: string;
+  requester_id: string;
+  recipient_id: string;
+  status?: "pending" | "accepted" | "declined";
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ChatRequestWithRequester extends ChatRequest {
+  requester: Student;
 }
 
 // Resource Categories Table
@@ -434,6 +463,45 @@ export interface ReportUpdate {
   target_type?: ReportTargetType;
   target_id?: string;
   reason?: string | null;
+}
+
+// User Preferences Table
+export type ThemeMode = "light" | "dark" | "high-contrast";
+
+export interface UserPreferences {
+  id: string;
+  student_id: string;
+  theme: ThemeMode;
+  font_size: "small" | "medium" | "large" | "extra-large";
+  high_contrast: boolean;
+  reduced_motion: boolean;
+  screen_reader_optimized: boolean;
+  keyboard_navigation_enhanced: boolean;
+  color_blind_mode: "none" | "protanopia" | "deuteranopia" | "tritanopia";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserPreferencesInsert {
+  id?: string;
+  student_id: string;
+  theme?: ThemeMode;
+  font_size?: "small" | "medium" | "large" | "extra-large";
+  high_contrast?: boolean;
+  reduced_motion?: boolean;
+  screen_reader_optimized?: boolean;
+  keyboard_navigation_enhanced?: boolean;
+  color_blind_mode?: "none" | "protanopia" | "deuteranopia" | "tritanopia";
+}
+
+export interface UserPreferencesUpdate {
+  theme?: ThemeMode;
+  font_size?: "small" | "medium" | "large" | "extra-large";
+  high_contrast?: boolean;
+  reduced_motion?: boolean;
+  screen_reader_optimized?: boolean;
+  keyboard_navigation_enhanced?: boolean;
+  color_blind_mode?: "none" | "protanopia" | "deuteranopia" | "tritanopia";
 }
 
 // ============================================================================
@@ -609,6 +677,12 @@ export interface Database {
         Row: Report;
         Insert: ReportInsert;
         Update: ReportUpdate;
+        Relationships: [];
+      };
+      user_preferences: {
+        Row: UserPreferences;
+        Insert: UserPreferencesInsert;
+        Update: UserPreferencesUpdate;
         Relationships: [];
       };
     };

@@ -9,7 +9,7 @@ import {
   CalendarHeader,
   Legend,
 } from '@/components/calendar';
-import { Spinner } from '@/components/ui/native-spinner';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -38,7 +38,7 @@ export default function CalendarPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-6xl flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <Spinner size="lg" />
+        <Spinner className="size-8" />
         <p className="text-sm text-muted-foreground">Loading events...</p>
       </div>
     );
@@ -51,17 +51,20 @@ export default function CalendarPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          isRegistered={user ? isRegistered(selectedEvent.id, user.id) : false}
-          onClose={() => setSelectedEvent(null)}
-          onRegister={() => {
-            handleRegister(selectedEvent.id);
-            setSelectedEvent(null);
-          }}
-        />
-      )}
+      <EventModal
+        event={selectedEvent}
+        open={!!selectedEvent}
+        isRegistered={user && selectedEvent ? isRegistered(selectedEvent.id, user.id) : false}
+        onClose={() => setSelectedEvent(null)}
+        onRegister={(eventId) => {
+          handleRegister(eventId);
+          setSelectedEvent(null);
+        }}
+        onUnregister={(eventId) => {
+          handleRegister(eventId);
+          setSelectedEvent(null);
+        }}
+      />
 
       <CalendarHeader
         currentMonth={currentMonth}

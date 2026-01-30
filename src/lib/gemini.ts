@@ -77,27 +77,61 @@ async function generateContent(prompt: string): Promise<GeminiResponse> {
 }
 
 /**
- * Generate test questions for a given FBLA event and topic
+ * Multiple choice question structure
  */
-export async function generateTestQuestions(eventName: string, topic: string): Promise<string[]> {
-  const eventContext = eventName && eventName !== topic 
-    ? `for the FBLA competitive event: "${eventName}"`
-    : 'for FBLA (Future Business Leaders of America) competitions';
-  
-  const prompt = `Generate 5 comprehensive test questions ${eventContext} on the topic: "${topic}".
+export interface MultipleChoiceQuestion {
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  correctAnswer: 'A' | 'B' | 'C' | 'D';
+}
+
+/**
+ * Generate multiple choice test questions for a given FBLA event
+ */
+export async function generateTestQuestions(eventName: string, _topic: string): Promise<string[]> {
+  // Legacy function - kept for backwards compatibility
+  const result = await generateMultipleChoiceQuestions(eventName, 5);
+  return result.map((q, i) => `${i + 1}. ${q.question}`);
+}
+
+/**
+ * Generate multiple choice questions for a given FBLA event
+ */
+export async function generateMultipleChoiceQuestions(
+  eventName: string, 
+  questionCount: number
+): Promise<MultipleChoiceQuestion[]> {
+  const prompt = `Generate exactly ${questionCount} multiple choice questions for the FBLA competitive event: "${eventName}".
+
+IMPORTANT: You must respond with ONLY a valid JSON array, no other text.
 
 Requirements:
-- Questions should be specifically relevant to ${eventName ? `the ${eventName} competitive event` : 'FBLA competitive events'}
-- Include a mix of question types (conceptual, application, analysis, calculation if applicable)
-- Format each question as a numbered list (1., 2., 3., etc.)
+- Questions should be specifically relevant to the ${eventName} competitive event
+- Each question should have exactly 4 options (A, B, C, D)
+- Only one answer should be correct
 - Make questions challenging but appropriate for high school students
-- Focus on practical business knowledge and skills relevant to ${eventName || 'FBLA'}
 - Questions should test understanding of key concepts, terminology, and real-world applications
 
-${eventName ? `Event: ${eventName}` : ''}
-Topic: ${topic}
+Respond with ONLY this JSON format (no markdown, no explanation):
+[
+  {
+    "question": "What is...",
+    "options": {
+      "A": "First option",
+      "B": "Second option",
+      "C": "Third option",
+      "D": "Fourth option"
+    },
+    "correctAnswer": "A"
+  }
+]
 
-Generate exactly 5 questions:`;
+Generate exactly ${questionCount} questions in valid JSON format:`;
 
   const result = await generateContent(prompt);
 
@@ -105,34 +139,40 @@ Generate exactly 5 questions:`;
     throw new Error(result.error);
   }
 
-  // Parse the response into individual questions
-  const questions = result.text
-    .split(/\n+/)
-    .filter((line) => {
-      const trimmed = line.trim();
-      // Match lines that start with numbers (1., 2., etc.) or are clearly questions
-      return (
-        trimmed.length > 10 &&
-        (/^\d+[\.\)]\s/.test(trimmed) || trimmed.startsWith('Q') || trimmed.includes('?'))
-      );
-    })
-    .map((line) => line.trim())
-    .slice(0, 5); // Take first 5 questions
-
-  // If parsing didn't work well, split by numbered patterns
-  if (questions.length < 3) {
-    const numberedMatches = result.text.match(/\d+[\.\)]\s+[^\n]+/g);
-    if (numberedMatches) {
-      return numberedMatches.slice(0, 5).map((q) => q.trim());
+  try {
+    // Try to extract JSON from the response
+    let jsonText = result.text.trim();
+    
+    // Remove markdown code blocks if present
+    if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```json?\n?/g, '').replace(/```\n?/g, '');
     }
+    
+    // Find the JSON array in the response
+    const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[0];
+    }
+    
+    const questions = JSON.parse(jsonText) as MultipleChoiceQuestion[];
+    
+    // Validate the structure
+    const validQuestions = questions.filter(q => 
+      q.question && 
+      q.options && 
+      q.options.A && q.options.B && q.options.C && q.options.D &&
+      ['A', 'B', 'C', 'D'].includes(q.correctAnswer)
+    ).slice(0, questionCount);
+    
+    if (validQuestions.length === 0) {
+      throw new Error('No valid questions generated');
+    }
+    
+    return validQuestions;
+  } catch (parseError) {
+    console.error('Failed to parse questions:', parseError, result.text);
+    throw new Error('Failed to parse generated questions. Please try again.');
   }
-
-  // Fallback: return the full text split by double newlines
-  if (questions.length === 0) {
-    return result.text.split(/\n\n+/).filter((q) => q.trim().length > 20).slice(0, 5);
-  }
-
-  return questions.length > 0 ? questions : [result.text];
 }
 
 /**

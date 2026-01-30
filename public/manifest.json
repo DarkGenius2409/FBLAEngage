@@ -1,0 +1,8 @@
+{
+  "name": "FBLA Engage",
+  "short_name": "FBLA Engage",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a2e4e",
+  "background_color": "#0a2e4e"
+}

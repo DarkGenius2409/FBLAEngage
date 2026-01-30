@@ -15,7 +15,8 @@
   "ios": {
     "contentInset": "automatic",
     "scrollEnabled": true,
-    "backgroundColor": "#0a2e4e"
+    "backgroundColor": "#0a2e4e",
+    "scheme": "fblaengage"
   },
   "android": {
     "allowMixedContent": true,
@@ -49,6 +50,10 @@
       "resize": "body",
       "style": "dark",
       "resizeOnFullScreen": true
+    },
+    "App": {
+      "iosScheme": "fblaengage",
+      "androidScheme": "fblaengage"
     }
   }
 }

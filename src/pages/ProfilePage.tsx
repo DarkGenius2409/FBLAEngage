@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import {
   MapPin,
   Briefcase,
@@ -13,47 +13,87 @@ import {
   Instagram,
   Check,
   ExternalLink,
-} from 'lucide-react';
-import { TikTokIcon } from '@/components/TikTokIcon';
-import { useAuth } from '@/contexts/AuthContext';
-import { useStudent, useFollows } from '@/hooks';
-import { supabase } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
-import { Spinner } from '@/components/ui/native-spinner';
+} from "lucide-react";
+import { TikTokIcon } from "@/components/TikTokIcon";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStudent, useFollows } from "@/hooks";
+import { supabase } from "@/lib/supabase";
+import { useNavigate, useParams } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+import { UserPlus, UserMinus } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const { student, loading: studentLoading } = useStudent(user?.id || null);
-  const { following, followingCount, followersCount } = useFollows(user?.id || null);
+  const navigate = useNavigate();
+  const { studentId: paramStudentId } = useParams<{ studentId?: string }>();
+  const profileStudentId = paramStudentId || user?.id || null;
+  const isOwnProfile = !!user?.id && profileStudentId === user.id;
+
+  const { student, loading: studentLoading } = useStudent(profileStudentId);
+  const currentUserFollows = useFollows(user?.id || null);
+  const profileOwnerFollows = useFollows(profileStudentId);
+
+  const following = isOwnProfile
+    ? currentUserFollows.following
+    : profileOwnerFollows.following;
+  const followingCount = isOwnProfile
+    ? currentUserFollows.followingCount
+    : (student?.following_count ?? profileOwnerFollows.followingCount);
+  const followersCount = isOwnProfile
+    ? currentUserFollows.followersCount
+    : (student?.follower_count ?? profileOwnerFollows.followersCount);
+
   const [isInstagramSynced, setIsInstagramSynced] = useState(false);
   const [isTikTokSynced, setIsTikTokSynced] = useState(false);
   const [postCount, setPostCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
 
   React.useEffect(() => {
-    if (user?.id) {
-      // Get post count
+    if (profileStudentId) {
       supabase
-        .from('posts')
-        .select('id', { count: 'exact', head: true })
-        .eq('author_id', user.id)
+        .from("posts")
+        .select("id", { count: "exact", head: true })
+        .eq("author_id", profileStudentId)
         .then(({ count }) => {
           setPostCount(count || 0);
         });
     }
-  }, [user?.id]);
+  }, [profileStudentId]);
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
-  const handleSocialSync = async (platform: 'instagram' | 'tiktok', value: boolean) => {
+  const handleFollowToggle = async () => {
+    if (!user?.id || !student?.id || isOwnProfile) return;
+    setFollowLoading(true);
+    try {
+      const isFollowing = currentUserFollows.isFollowing(student.id);
+      const { error } = isFollowing
+        ? await currentUserFollows.unfollow(student.id)
+        : await currentUserFollows.follow(student.id);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success(isFollowing ? "Unfollowed" : "Following");
+      }
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleSocialSync = async (
+    platform: "instagram" | "tiktok",
+    value: boolean,
+  ) => {
     // TODO: Implement social media sync when API integration is ready
-    if (platform === 'instagram') {
+    if (platform === "instagram") {
       setIsInstagramSynced(value);
     } else {
       setIsTikTokSynced(value);
@@ -64,7 +104,7 @@ export default function ProfilePage() {
   if (studentLoading) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl pb-20 flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <Spinner size="lg" />
+        <Spinner className="size-8" />
         <p className="text-sm text-muted-foreground">Loading profile...</p>
       </div>
     );
@@ -80,8 +120,8 @@ export default function ProfilePage() {
     );
   }
 
-  const role = student.school_roles?.[0]?.role || 'Member';
-  const schoolName = student.school?.name || 'No Chapter';
+  const role = student.school_roles?.[0]?.role || "Member";
+  const schoolName = student.school?.name || "No Chapter";
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl pb-20">
@@ -101,19 +141,49 @@ export default function ProfilePage() {
               {student.school && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  {student.school.city || ''} {student.school.state || ''}
+                  {student.school.city || ""} {student.school.state || ""}
                 </p>
               )}
             </div>
           </div>
-          <Button variant="outline" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
+          {isOwnProfile ? (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate("/profile/edit")}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          ) : user?.id && student?.id ? (
+            <Button
+              variant={
+                currentUserFollows.isFollowing(student.id)
+                  ? "outline"
+                  : "default"
+              }
+              size="sm"
+              onClick={handleFollowToggle}
+              disabled={followLoading}
+            >
+              {currentUserFollows.isFollowing(student.id) ? (
+                <>
+                  <UserMinus className="h-4 w-4 mr-1.5" />
+                  Unfollow
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-1.5" />
+                  Follow
+                </>
+              )}
+            </Button>
+          ) : null}
         </div>
 
         <div className="border-t pt-4">
           <p className="text-sm text-muted-foreground mb-4">
-            {student.bio || 'No bio yet. Add one to tell others about yourself!'}
+            {student.bio ||
+              "No bio yet. Add one to tell others about yourself!"}
           </p>
           {student.interests && student.interests.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -143,89 +213,120 @@ export default function ProfilePage() {
         </Card>
       </div>
 
-      {/* Social Media Sync */}
-      <Card className="p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-2">Connected Accounts</h3>
-        <p className="text-xs text-muted-foreground mb-4">
-          Sync your social media accounts to automatically share your posts to FBLA Engage
-        </p>
-        
-        <div className="space-y-3">
-          {/* Instagram */}
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
-                <Instagram className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h4 className="text-sm font-medium">Instagram</h4>
-                <p className="text-xs text-muted-foreground">
-                  {isInstagramSynced ? 'Connected' : 'Not connected'}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant={isInstagramSynced ? 'outline' : 'default'}
-              size="sm"
-              className={isInstagramSynced ? '' : 'bg-primary hover:bg-primary/90'}
-              onClick={() => handleSocialSync('instagram', !isInstagramSynced)}
-            >
-              {isInstagramSynced ? (
-                <>
-                  <Check className="h-3 w-3 mr-1" />
-                  <span className="text-xs">Connected</span>
-                </>
-              ) : (
-                <span className="text-xs">Connect</span>
-              )}
-            </Button>
-          </div>
+      {/* Accessibility Settings - own profile only */}
+      {isOwnProfile && (
+        <Card className="p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-2">Accessibility Settings</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Customize your app experience to match your accessibility needs
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/profile/accessibility")}
+            className="w-full"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Configure Accessibility Settings
+          </Button>
+        </Card>
+      )}
 
-          {/* TikTok */}
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                <TikTokIcon />
+      {/* Social Media Sync - own profile only */}
+      {isOwnProfile && (
+        <Card className="p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-2">Connected Accounts</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Sync your social media accounts to automatically share your posts to
+            FBLA Engage
+          </p>
+
+          <div className="space-y-3">
+            {/* Instagram */}
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <Instagram className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">Instagram</h4>
+                  <p className="text-xs text-muted-foreground">
+                    {isInstagramSynced ? "Connected" : "Not connected"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-sm font-medium">TikTok</h4>
-                <p className="text-xs text-muted-foreground">
-                  {isTikTokSynced ? 'Connected' : 'Not connected'}
-                </p>
-              </div>
+              <Button
+                variant={isInstagramSynced ? "outline" : "default"}
+                size="sm"
+                className={
+                  isInstagramSynced ? "" : "bg-primary hover:bg-primary/90"
+                }
+                onClick={() =>
+                  handleSocialSync("instagram", !isInstagramSynced)
+                }
+              >
+                {isInstagramSynced ? (
+                  <>
+                    <Check className="h-3 w-3 mr-1" />
+                    <span className="text-xs">Connected</span>
+                  </>
+                ) : (
+                  <span className="text-xs">Connect</span>
+                )}
+              </Button>
             </div>
-            <Button
-              variant={isTikTokSynced ? 'outline' : 'default'}
-              size="sm"
-              className={isTikTokSynced ? '' : 'bg-primary hover:bg-primary/90'}
-              onClick={() => handleSocialSync('tiktok', !isTikTokSynced)}
-            >
-              {isTikTokSynced ? (
-                <>
-                  <Check className="h-3 w-3 mr-1" />
-                  <span className="text-xs">Connected</span>
-                </>
-              ) : (
-                <span className="text-xs">Connect</span>
-              )}
-            </Button>
+
+            {/* TikTok */}
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                  <TikTokIcon />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">TikTok</h4>
+                  <p className="text-xs text-muted-foreground">
+                    {isTikTokSynced ? "Connected" : "Not connected"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={isTikTokSynced ? "outline" : "default"}
+                size="sm"
+                className={
+                  isTikTokSynced ? "" : "bg-primary hover:bg-primary/90"
+                }
+                onClick={() => handleSocialSync("tiktok", !isTikTokSynced)}
+              >
+                {isTikTokSynced ? (
+                  <>
+                    <Check className="h-3 w-3 mr-1" />
+                    <span className="text-xs">Connected</span>
+                  </>
+                ) : (
+                  <span className="text-xs">Connect</span>
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* FBLA Chapter */}
       {student.school && (
         <Card className="p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">My FBLA Chapter</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {isOwnProfile ? "My FBLA Chapter" : "FBLA Chapter"}
+          </h3>
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
               <span className="text-xl">🏫</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-medium mb-1">{student.school.name}</h4>
+              <h4 className="text-sm font-medium mb-1">
+                {student.school.name}
+              </h4>
               <p className="text-xs text-muted-foreground mb-2">
-                {student.school.city || ''} {student.school.state || ''}
-                {student.school.zip ? ` • ${student.school.zip}` : ''}
+                {student.school.city || ""} {student.school.state || ""}
+                {student.school.zip ? ` • ${student.school.zip}` : ""}
               </p>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -257,11 +358,16 @@ export default function ProfilePage() {
           </h3>
           <div className="space-y-2">
             {student.awards.map((achievement, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+              <div
+                key={index}
+                className="flex items-center gap-3 p-3 bg-muted rounded-lg"
+              >
                 <span className="text-2xl">{achievement.icon}</span>
                 <div>
                   <h4 className="text-sm font-medium">{achievement.title}</h4>
-                  <p className="text-xs text-muted-foreground">{achievement.event}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {achievement.event}
+                  </p>
                 </div>
               </div>
             ))}
@@ -272,13 +378,16 @@ export default function ProfilePage() {
       {/* Following List */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Following ({followingCount})</h3>
-          <Button variant="outline" size="sm">
-            <span className="text-xs">View All</span>
-          </Button>
+          <h3 className="text-lg font-semibold">
+            Following ({followingCount})
+          </h3>
         </div>
         {following.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Not following anyone yet</p>
+          <p className="text-sm text-muted-foreground">
+            {isOwnProfile
+              ? "Not following anyone yet"
+              : "Not following anyone yet"}
+          </p>
         ) : (
           <div className="space-y-2">
             {following.slice(0, 5).map((followingId) => (
@@ -298,9 +407,9 @@ function FollowingItem({ studentId }: { studentId: string }) {
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -313,11 +422,12 @@ function FollowingItem({ studentId }: { studentId: string }) {
       <div className="flex-1">
         <h4 className="text-sm font-medium">{student.name}</h4>
         <p className="text-xs text-muted-foreground">
-          {student.school_roles?.[0]?.role || 'Member'} • {student.school?.name || 'No Chapter'}
+          {student.school_roles?.[0]?.role || "Member"} •{" "}
+          {student.school?.name || "No Chapter"}
         </p>
       </div>
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         size="sm"
         onClick={() => navigate(`/profile/${studentId}`)}
       >
@@ -326,4 +436,3 @@ function FollowingItem({ studentId }: { studentId: string }) {
     </div>
   );
 }
-

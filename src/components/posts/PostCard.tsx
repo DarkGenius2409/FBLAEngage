@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -14,9 +15,11 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, currentUserId }: PostCardProps) {
+  const navigate = useNavigate();
   const { isLiked, toggleLike, likeCount } = usePostLikes(post.id);
   const { commentCount } = usePostComments(post.id);
   const [showComments, setShowComments] = useState(false);
+  const authorId = post.author?.id;
 
   const handleLike = async () => {
     if (!currentUserId) return;
@@ -44,13 +47,17 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
 
   return (
     <Card className="overflow-hidden">
-      {/* Post Header */}
+      {/* Post Header - clickable to go to author profile */}
       <div className="p-4 pb-3">
-        <div className="flex items-start gap-3">
-          <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-full text-sm">
+        <button
+          type="button"
+          onClick={() => authorId && navigate(`/profile/${authorId}`)}
+          className="flex items-start gap-3 w-full text-left hover:opacity-90 transition-opacity rounded-lg -m-2 p-2"
+        >
+          <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-full text-sm shrink-0">
             {post.author ? getInitials(post.author.name) : 'U'}
           </Avatar>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold">{post.author?.name || 'Unknown'}</h4>
             <p className="text-xs text-muted-foreground">
               {post.author?.school_roles?.[0]?.role || 'Member'}
@@ -58,7 +65,7 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">{formatTime(post.created_at)}</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Post Content */}

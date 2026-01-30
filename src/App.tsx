@@ -2,24 +2,27 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
+import { Toaster } from '@/components/ui/sonner';
+import { Spinner } from '@/components/ui/spinner';
 import HomePage from '@/pages/HomePage';
 import CalendarPage from '@/pages/CalendarPage';
 import ResourcesPage from '@/pages/ResourcesPage';
 import ChatPage from '@/pages/ChatPage';
 import ProfilePage from '@/pages/ProfilePage';
+import EditProfilePage from '@/pages/EditProfilePage';
+import AccessibilitySettingsPage from '@/pages/AccessibilitySettingsPage';
 import SignInPage from '@/pages/SignInPage';
 import SignUpPage from '@/pages/SignUpPage';
+import { useUserPreferences } from '@/hooks';
 
 function AuthRedirect() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen mobile-viewport-fix bg-background flex flex-col items-center justify-center gap-4">
+        <Spinner className="size-8" />
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -32,6 +35,10 @@ function AuthRedirect() {
 }
 
 function AppRoutes() {
+  const { user } = useAuth();
+  // Apply user preferences globally
+  useUserPreferences(user?.id || null);
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -67,6 +74,9 @@ function AppRoutes() {
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/edit" element={<EditProfilePage />} />
+        <Route path="/profile/accessibility" element={<AccessibilitySettingsPage />} />
+        <Route path="/profile/:studentId" element={<ProfilePage />} />
       </Route>
 
       {/* Catch all - redirect to home */}
@@ -80,6 +90,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster />
       </AuthProvider>
     </BrowserRouter>
   );

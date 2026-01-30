@@ -2,6 +2,8 @@
 """
 FBLA Engage Database Seeding Script
 Comprehensive script for seeding, verifying, and managing test data.
+Targets the consolidated schema (sql/schema.sql), including social_connections,
+oauth_states, and social_imports.
 
 Features:
 - Creates real Supabase Auth users
@@ -18,7 +20,8 @@ Requirements:
 Usage:
     python scripts/seed.py seed [--reset] [--count=20]
     python scripts/seed.py verify
-    python scripts/seed.py cleanup-auth
+    python scripts/seed.py cleanup-auth        # Delete seeded users only
+    python scripts/seed.py cleanup-auth-all    # Delete ALL auth users
     python scripts/seed.py reset
 """
 
@@ -294,16 +297,23 @@ def delete_auth_user(user_id: str) -> bool:
 # ============================================================================
 
 def reset_database(include_auth: bool = False) -> None:
-    """Safely reset the database by deleting all data (respects foreign keys)"""
+    """Safely reset the database by deleting all data (respects foreign keys).
+    Matches consolidated schema: includes social_imports, social_connections, oauth_states, chat_requests.
+    """
     print("=" * 60)
     print("Resetting Database...")
     print("=" * 60)
     
-    # Delete in reverse order of dependencies
-    tables = [
+    # Delete in reverse order of dependencies (matches sql/schema.sql)
+    # Tables with "id" use neq("id", ...); oauth_states uses "state" as PK.
+    tables_with_id = [
+        "social_imports",
+        "social_connections",
+        "user_preferences",
         "messages",
         "chat_participants",
         "chats",
+        "chat_requests",
         "event_registrations",
         "events",
         "student_follows",
@@ -317,15 +327,29 @@ def reset_database(include_auth: bool = False) -> None:
         "notifications",
         "reports",
         "students",
-        "schools"
+        "schools",
     ]
     
-    for table in tables:
+    for table in tables_with_id:
         try:
-            result = supabase.table(table).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+            # Most tables have uuid "id"; composite-PK tables may not.
+            # Supabase delete requires a filter; we use a no-op filter that matches all.
+            if table in ("likes", "event_registrations", "student_follows", "chat_participants"):
+                # Composite PK: filter on first column to match all rows
+                col = "user_id" if table == "likes" else "event_id" if table == "event_registrations" else "follower_id" if table == "student_follows" else "chat_id"
+                result = supabase.table(table).delete().neq(col, "00000000-0000-0000-0000-000000000000").execute()
+            else:
+                result = supabase.table(table).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
             print(f"  ✓ Cleared {table}")
         except Exception as e:
             print(f"  ⚠ Could not clear {table}: {e}")
+    
+    # oauth_states: PK is "state" (text), no "id"
+    try:
+        supabase.table("oauth_states").delete().neq("state", "").execute()
+        print("  ✓ Cleared oauth_states")
+    except Exception as e:
+        print(f"  ⚠ Could not clear oauth_states: {e}")
     
     print("  ✓ Database tables cleared")
     
@@ -434,6 +458,24 @@ def create_students_with_auth(school_ids: List[str], count: int = 20) -> List[st
                 student_ids.append(student_id)
                 skipped_count += 1
                 print(f"  User {i+1}/{count}: {name} ({email}) - Already exists, skipping")
+                
+                # Ensure preferences exist for existing student
+                try:
+                    existing_prefs = supabase.table("user_preferences").select("id").eq("student_id", student_id).execute()
+                    if not existing_prefs.data or len(existing_prefs.data) == 0:
+                        preferences_data = {
+                            "student_id": student_id,
+                            "font_size": "medium",
+                            "high_contrast": False,
+                            "reduced_motion": False,
+                            "screen_reader_optimized": False,
+                            "keyboard_navigation_enhanced": False,
+                            "color_blind_mode": "none"
+                        }
+                        supabase.table("user_preferences").insert(preferences_data).execute()
+                except Exception:
+                    pass
+                
                 continue
         except Exception as e:
             pass
@@ -472,7 +514,6 @@ def create_students_with_auth(school_ids: List[str], count: int = 20) -> List[st
                 {
                     "title": random.choice(["State Champion", "Regional Winner", "National Qualifier", "Chapter Award"]),
                     "event": random.choice(FBLA_EVENTS[:15]),
-                    "year": random.randint(2021, 2024),
                     "icon": random.choice(["🏆", "🥇", "⭐", "🎖️"])
                 }
             ] if random.random() > 0.4 else [],
@@ -488,6 +529,22 @@ def create_students_with_auth(school_ids: List[str], count: int = 20) -> List[st
                 student_ids.append(student_id)
                 created_count += 1
                 print(f"    ✓ Created: {name} ({email})")
+                
+                # Create default user preferences for the student
+                try:
+                    preferences_data = {
+                        "student_id": student_id,
+                        "font_size": "medium",
+                        "high_contrast": False,
+                        "reduced_motion": False,
+                        "screen_reader_optimized": False,
+                        "keyboard_navigation_enhanced": False,
+                        "color_blind_mode": "none"
+                    }
+                    supabase.table("user_preferences").insert(preferences_data).execute()
+                except Exception as pref_error:
+                    # Preferences creation is optional, don't fail the whole student creation
+                    pass
         except Exception as e:
             error_str = str(e)
             if "duplicate key" in error_str or "23505" in error_str:
@@ -499,6 +556,23 @@ def create_students_with_auth(school_ids: List[str], count: int = 20) -> List[st
                         student_ids.append(student_id)
                         skipped_count += 1
                         print(f"    ⚠ Already exists, using existing: {name} ({email})")
+                        
+                        # Ensure preferences exist for existing student
+                        try:
+                            existing_prefs = supabase.table("user_preferences").select("id").eq("student_id", student_id).execute()
+                            if not existing_prefs.data or len(existing_prefs.data) == 0:
+                                preferences_data = {
+                                    "student_id": student_id,
+                                    "font_size": "medium",
+                                    "high_contrast": False,
+                                    "reduced_motion": False,
+                                    "screen_reader_optimized": False,
+                                    "keyboard_navigation_enhanced": False,
+                                    "color_blind_mode": "none"
+                                }
+                                supabase.table("user_preferences").insert(preferences_data).execute()
+                        except Exception:
+                            pass
                     else:
                         print(f"    ✗ Failed to create student profile: {e}")
                 except:
@@ -903,13 +977,19 @@ def verify_seeding() -> None:
         "likes": 0,
         "comments": 0,
         "event_registrations": 0,
+        "user_preferences": 1,
+        "social_connections": 0,
+        "social_imports": 0,
+        "oauth_states": 0,
+        "chat_requests": 0,
     }
     
     all_good = True
     for table, min_count in tables.items():
         try:
-            result = supabase.table(table).select("id", count="exact").limit(1).execute()
-            count = result.count if hasattr(result, 'count') else (len(result.data) if result.data else 0)
+            pk = "state" if table == "oauth_states" else "id"
+            result = supabase.table(table).select(pk, count="exact").limit(1).execute()
+            count = result.count if hasattr(result, "count") else (len(result.data) if result.data else 0)
             status = "✓" if count >= min_count else "✗"
             print(f"{status} {table:20s} {count:4d} records")
             if count < min_count:
@@ -973,6 +1053,44 @@ def cleanup_auth_users() -> None:
         if delete_auth_user(user.get("id")):
             deleted += 1
             print(f"  ✓ Deleted: {user.get('email')}")
+    
+    print()
+    print(f"✓ Deleted {deleted} auth users")
+
+
+def cleanup_auth_users_all() -> None:
+    """Delete ALL auth users (seeded and non-seeded). Use with caution."""
+    print("=" * 60)
+    print("Cleanup ALL Auth Users")
+    print("=" * 60)
+    print()
+    
+    users = list_auth_users()
+    
+    if not users:
+        print("No auth users found.")
+        return
+    
+    print(f"Found {len(users)} auth user(s) in total.")
+    print()
+    for user in users[:15]:
+        print(f"  - {user.get('email', '?')} (ID: {user.get('id', '?')})")
+    if len(users) > 15:
+        print(f"  ... and {len(users) - 15} more")
+    print()
+    print("⚠ WARNING: This will delete ALL auth users, including non-seeded accounts.")
+    print("  This cannot be undone.")
+    print()
+    response = input("Type 'yes' to delete ALL auth users: ")
+    if response.strip().lower() not in ["yes", "y"]:
+        print("Cancelled.")
+        return
+    
+    deleted = 0
+    for user in users:
+        if delete_auth_user(user.get("id")):
+            deleted += 1
+            print(f"  ✓ Deleted: {user.get('email', '?')}")
     
     print()
     print(f"✓ Deleted {deleted} auth users")
@@ -1042,9 +1160,10 @@ def main():
 Examples:
   python scripts/seed.py seed                    # Seed database
   python scripts/seed.py seed --reset            # Reset and seed
-  python scripts/seed.py seed --count=50          # Seed with 50 students
+  python scripts/seed.py seed --count=50         # Seed with 50 students
   python scripts/seed.py verify                  # Verify seeding
-  python scripts/seed.py cleanup-auth            # Delete seeded auth users
+  python scripts/seed.py cleanup-auth            # Delete seeded auth users only
+  python scripts/seed.py cleanup-auth-all        # Delete ALL auth users
   python scripts/seed.py reset                   # Reset database only
   python scripts/seed.py reset --auth            # Reset database and auth users
         """
@@ -1061,8 +1180,9 @@ Examples:
     # Verify command
     subparsers.add_parser("verify", help="Verify database seeding")
     
-    # Cleanup command
-    subparsers.add_parser("cleanup-auth", help="Delete seeded auth users")
+    # Cleanup commands
+    subparsers.add_parser("cleanup-auth", help="Delete seeded auth users only (student*@fbla.test)")
+    subparsers.add_parser("cleanup-auth-all", help="Delete ALL auth users (use with caution)")
     
     # Reset command
     reset_parser = subparsers.add_parser("reset", help="Reset database (delete all data)")
@@ -1094,6 +1214,9 @@ Examples:
     
     elif args.command == "cleanup-auth":
         cleanup_auth_users()
+    
+    elif args.command == "cleanup-auth-all":
+        cleanup_auth_users_all()
     
     elif args.command == "reset":
         response = input("This will DELETE ALL DATA. Continue? (yes/no): ")

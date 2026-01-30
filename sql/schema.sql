@@ -1,44 +1,93 @@
--- FBLA Engage Supabase Schema
--- Version 2.0 (Incorporates community feedback)
+-- FBLA Engage Supabase Schema (Consolidated)
+--
+-- Run this file in the Supabase SQL Editor to fully reset and recreate the database.
+-- Part 1 drops all public tables, functions, and types. Part 2 recreates everything.
+--
+-- Includes: base schema, chat DM policies (create/delete chats, add/remove members),
+-- social connections (OAuth for Instagram/TikTok), and all prior migrations.
+--
+-- Other sql/*.sql files (CHAT_DM_POLICIES, SOCIAL_CONNECTIONS_SCHEMA, etc.) are
+-- superseded by this file for reset purposes; keep them only for reference.
 
--- 1. Enable extensions
+-- =============================================================================
+-- PART 1: CLEAN (drop existing objects)
+-- Dropping tables CASCADE removes their triggers and policies.
+-- =============================================================================
+
+-- Trigger on auth.users (must be dropped explicitly; not tied to public tables)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Drop tables (reverse dependency order). CASCADE drops triggers and policies.
+DROP TABLE IF EXISTS public.user_preferences CASCADE;
+DROP TABLE IF EXISTS public.social_imports CASCADE;
+DROP TABLE IF EXISTS public.social_connections CASCADE;
+DROP TABLE IF EXISTS public.oauth_states CASCADE;
+DROP TABLE IF EXISTS public.messages CASCADE;
+DROP TABLE IF EXISTS public.chat_participants CASCADE;
+DROP TABLE IF EXISTS public.chats CASCADE;
+DROP TABLE IF EXISTS public.chat_requests CASCADE;
+DROP TABLE IF EXISTS public.reports CASCADE;
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.media CASCADE;
+DROP TABLE IF EXISTS public.likes CASCADE;
+DROP TABLE IF EXISTS public.comments CASCADE;
+DROP TABLE IF EXISTS public.posts CASCADE;
+DROP TABLE IF EXISTS public.event_registrations CASCADE;
+DROP TABLE IF EXISTS public.events CASCADE;
+DROP TABLE IF EXISTS public.student_follows CASCADE;
+DROP TABLE IF EXISTS public.school_roles CASCADE;
+DROP TABLE IF EXISTS public.resources CASCADE;
+DROP TABLE IF EXISTS public.resource_categories CASCADE;
+DROP TABLE IF EXISTS public.students CASCADE;
+DROP TABLE IF EXISTS public.schools CASCADE;
+
+-- Drop functions
+DROP FUNCTION IF EXISTS public.get_my_chat_ids() CASCADE;
+DROP FUNCTION IF EXISTS public.update_social_connection_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.update_post_like_count() CASCADE;
+DROP FUNCTION IF EXISTS public.update_post_comment_count() CASCADE;
+DROP FUNCTION IF EXISTS public.update_school_member_count() CASCADE;
+DROP FUNCTION IF EXISTS public.update_follow_counts() CASCADE;
+
+-- Drop types
+DROP TYPE IF EXISTS public.media_type CASCADE;
+DROP TYPE IF EXISTS public.resource_type CASCADE;
+DROP TYPE IF EXISTS public.event_level CASCADE;
+DROP TYPE IF EXISTS public.chat_type CASCADE;
+DROP TYPE IF EXISTS public.report_target_type CASCADE;
+
+-- =============================================================================
+-- PART 2: CREATE (extensions, types, tables, functions, triggers, RLS, indexes)
+-- =============================================================================
+
+-- 1. Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. Create ENUM types (only if they don't exist)
--- Note: PostgreSQL doesn't support CREATE TYPE IF NOT EXISTS, so we use DO blocks
+-- 2. ENUM types
 DO $$ BEGIN
   CREATE TYPE "public"."media_type" AS ENUM ('image', 'video', 'document');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+EXCEPTION WHEN duplicate_object THEN null;
 END $$;
-
 DO $$ BEGIN
   CREATE TYPE "public"."resource_type" AS ENUM ('pdf', 'link', 'video');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+EXCEPTION WHEN duplicate_object THEN null;
 END $$;
-
 DO $$ BEGIN
   CREATE TYPE "public"."event_level" AS ENUM ('regional', 'state', 'national');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+EXCEPTION WHEN duplicate_object THEN null;
 END $$;
-
 DO $$ BEGIN
   CREATE TYPE "public"."chat_type" AS ENUM ('direct', 'group', 'school');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+EXCEPTION WHEN duplicate_object THEN null;
 END $$;
-
 DO $$ BEGIN
   CREATE TYPE "public"."report_target_type" AS ENUM ('post', 'comment', 'student');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+EXCEPTION WHEN duplicate_object THEN null;
 END $$;
 
--- 3. Create tables
+-- 3. Tables
 
--- Schools Table (FBLA Chapters)
 CREATE TABLE "public"."schools" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "name" text NOT NULL,
@@ -49,14 +98,13 @@ CREATE TABLE "public"."schools" (
     "email" text UNIQUE,
     "image" text,
     "banner" text,
-    "member_count" integer DEFAULT 0, -- Maintained by trigger
+    "member_count" integer DEFAULT 0,
     "established_at" timestamp with time zone,
     PRIMARY KEY ("id")
 );
 
--- Students Table (Users)
 CREATE TABLE "public"."students" (
-    "id" uuid NOT NULL, -- Matches auth.users.id
+    "id" uuid NOT NULL,
     "name" text NOT NULL,
     "email" text NOT NULL UNIQUE,
     "school_id" uuid,
@@ -65,23 +113,21 @@ CREATE TABLE "public"."students" (
     "banner" text,
     "awards" jsonb DEFAULT '[]'::jsonb,
     "interests" jsonb DEFAULT '[]'::jsonb,
-    "follower_count" integer DEFAULT 0, -- Maintained by trigger
-    "following_count" integer DEFAULT 0, -- Maintained by trigger
+    "follower_count" integer DEFAULT 0,
+    "following_count" integer DEFAULT 0,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     PRIMARY KEY ("id"),
     FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE SET NULL
 );
 
--- School Roles Table
 CREATE TABLE "public"."school_roles" (
     "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     "student_id" uuid NOT NULL REFERENCES "public"."students"("id") ON DELETE CASCADE,
     "school_id" uuid NOT NULL REFERENCES "public"."schools"("id") ON DELETE CASCADE,
-    "role" text NOT NULL, -- e.g., 'President', 'Member', 'Advisor'
+    "role" text NOT NULL,
     UNIQUE ("student_id", "school_id")
 );
 
--- Events and Registrations
 CREATE TABLE "public"."events" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "title" text NOT NULL,
@@ -103,13 +149,12 @@ CREATE TABLE "public"."event_registrations" (
     PRIMARY KEY ("event_id", "student_id")
 );
 
--- Posts, Media, Comments, Likes
 CREATE TABLE "public"."posts" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "content" text NOT NULL,
     "author_id" uuid NOT NULL,
-    "like_count" integer DEFAULT 0, -- Maintained by trigger
-    "comment_count" integer DEFAULT 0, -- Maintained by trigger
+    "like_count" integer DEFAULT 0,
+    "comment_count" integer DEFAULT 0,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     PRIMARY KEY ("id"),
     FOREIGN KEY ("author_id") REFERENCES "public"."students"("id") ON DELETE CASCADE
@@ -145,7 +190,6 @@ CREATE TABLE "public"."likes" (
     FOREIGN KEY ("post_id") REFERENCES "public"."posts"("id") ON DELETE CASCADE
 );
 
--- Student Follows (Social Graph)
 CREATE TABLE "public"."student_follows" (
     "follower_id" uuid NOT NULL,
     "following_id" uuid NOT NULL,
@@ -155,10 +199,11 @@ CREATE TABLE "public"."student_follows" (
     CONSTRAINT "no_self_follow" CHECK (follower_id <> following_id)
 );
 
--- Chat System
 CREATE TABLE "public"."chats" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "type" chat_type DEFAULT 'direct',
+    "name" text,
+    "image" text,
     "created_by" uuid REFERENCES "public"."students"("id"),
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     PRIMARY KEY ("id")
@@ -181,8 +226,6 @@ CREATE TABLE "public"."messages" (
     FOREIGN KEY ("chat_id") REFERENCES "public"."chats"("id") ON DELETE CASCADE
 );
 
--- Resources
--- Resource Categories (kept for backward compatibility, but now primarily use event_name)
 CREATE TABLE "public"."resource_categories" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "name" text NOT NULL,
@@ -191,26 +234,21 @@ CREATE TABLE "public"."resource_categories" (
     PRIMARY KEY ("id")
 );
 
--- Resources Table
--- Resources are linked to FBLA competitive events via the event_name field
--- The event_name should match official FBLA event names (e.g., "Accounting", "Business Plan", "Marketing")
--- category_id is kept for backward compatibility but event_name is the primary way to organize resources
 CREATE TABLE "public"."resources" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "title" text NOT NULL,
-    "description" text, -- Detailed description of the resource
-    "type" resource_type NOT NULL, -- 'pdf', 'link', or 'video'
-    "url" text, -- URL to the resource (download link, external link, or video URL)
-    "event_name" text, -- Links to FBLA competitive event name (e.g., "Accounting", "Business Plan")
-    "category_id" uuid, -- Kept for backward compatibility with resource_categories
-    "downloads" integer DEFAULT 0, -- Track number of times resource has been downloaded/accessed
+    "description" text,
+    "type" resource_type NOT NULL,
+    "url" text,
+    "event_name" text,
+    "category_id" uuid,
+    "downloads" integer DEFAULT 0,
     "created_at" timestamp with time zone DEFAULT now() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT now(),
     PRIMARY KEY ("id"),
     FOREIGN KEY ("category_id") REFERENCES "public"."resource_categories"("id") ON DELETE SET NULL
 );
 
--- Notifications
 CREATE TABLE "public"."notifications" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "recipient_id" uuid NOT NULL,
@@ -222,7 +260,6 @@ CREATE TABLE "public"."notifications" (
     FOREIGN KEY ("recipient_id") REFERENCES "public"."students"("id") ON DELETE CASCADE
 );
 
--- Moderation
 CREATE TABLE "public"."reports" (
     "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     "reporter_id" uuid REFERENCES "public"."students"("id") ON DELETE SET NULL,
@@ -232,9 +269,76 @@ CREATE TABLE "public"."reports" (
     "created_at" timestamptz DEFAULT now()
 );
 
--- 4. Create database functions and triggers
+-- DM request flow: 1:1 chats require recipient to accept before chat is created
+CREATE TABLE "public"."chat_requests" (
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "requester_id" uuid NOT NULL REFERENCES "public"."students"("id") ON DELETE CASCADE,
+    "recipient_id" uuid NOT NULL REFERENCES "public"."students"("id") ON DELETE CASCADE,
+    "status" text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT "chat_requests_no_self" CHECK (requester_id <> recipient_id)
+);
 
--- Trigger to create a student profile when a new user signs up
+CREATE UNIQUE INDEX "idx_chat_requests_pending_pair" ON "public"."chat_requests" (requester_id, recipient_id)
+  WHERE status = 'pending';
+
+-- Social / OAuth (from SOCIAL_CONNECTIONS_SCHEMA)
+CREATE TABLE "public"."oauth_states" (
+    "state" text PRIMARY KEY,
+    "user_id" uuid NOT NULL REFERENCES "public"."students"("id") ON DELETE CASCADE,
+    "platform" text NOT NULL CHECK (platform IN ('instagram', 'tiktok')),
+    "expires_at" timestamptz NOT NULL,
+    "created_at" timestamptz DEFAULT now()
+);
+
+CREATE TABLE "public"."social_connections" (
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "student_id" uuid NOT NULL REFERENCES "public"."students"("id") ON DELETE CASCADE,
+    "platform" text NOT NULL CHECK (platform IN ('instagram', 'tiktok')),
+    "platform_user_id" text NOT NULL,
+    "username" text,
+    "display_name" text,
+    "profile_picture" text,
+    "access_token" text NOT NULL,
+    "refresh_token" text,
+    "token_expires_at" timestamptz,
+    "scopes" text[],
+    "last_synced_at" timestamptz,
+    "created_at" timestamptz DEFAULT now(),
+    "updated_at" timestamptz DEFAULT now(),
+    UNIQUE ("student_id", "platform")
+);
+
+CREATE TABLE "public"."social_imports" (
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "connection_id" uuid NOT NULL REFERENCES "public"."social_connections"("id") ON DELETE CASCADE,
+    "platform_post_id" text NOT NULL,
+    "post_id" uuid REFERENCES "public"."posts"("id") ON DELETE SET NULL,
+    "media_url" text,
+    "caption" text,
+    "permalink" text,
+    "media_type" text,
+    "imported_at" timestamptz DEFAULT now(),
+    UNIQUE ("connection_id", "platform_post_id")
+);
+
+CREATE TABLE "public"."user_preferences" (
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "student_id" uuid NOT NULL UNIQUE REFERENCES "public"."students"("id") ON DELETE CASCADE,
+    "theme" text DEFAULT 'light' CHECK (theme IN ('light', 'dark', 'high-contrast')),
+    "font_size" text DEFAULT 'medium' CHECK (font_size IN ('small', 'medium', 'large', 'extra-large')),
+    "high_contrast" boolean DEFAULT false,
+    "reduced_motion" boolean DEFAULT false,
+    "screen_reader_optimized" boolean DEFAULT false,
+    "keyboard_navigation_enhanced" boolean DEFAULT false,
+    "color_blind_mode" text DEFAULT 'none' CHECK (color_blind_mode IN ('none', 'protanopia', 'deuteranopia', 'tritanopia')),
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL
+);
+
+-- 4. Functions and triggers
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -248,7 +352,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to update post like count
 CREATE OR REPLACE FUNCTION public.update_post_like_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -261,7 +364,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to update post comment count
 CREATE OR REPLACE FUNCTION public.update_post_comment_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -274,7 +376,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to update school member count
 CREATE OR REPLACE FUNCTION public.update_school_member_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -287,7 +388,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to update follower/following counts
 CREATE OR REPLACE FUNCTION public.update_follow_counts()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -302,7 +402,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 5. Apply triggers to tables
+CREATE OR REPLACE FUNCTION public.update_social_connection_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Avoid RLS recursion: returns chat IDs for current user without querying chat_participants via RLS.
+CREATE OR REPLACE FUNCTION public.get_my_chat_ids()
+RETURNS SETOF uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT chat_id FROM public.chat_participants WHERE student_id = auth.uid();
+$$;
+
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
@@ -318,12 +436,25 @@ CREATE TRIGGER post_comment_count_trigger
 CREATE TRIGGER school_member_count_trigger
   AFTER INSERT OR DELETE ON public.students
   FOR EACH ROW EXECUTE FUNCTION public.update_school_member_count();
-  
+
 CREATE TRIGGER student_follow_count_trigger
   AFTER INSERT OR DELETE ON public.student_follows
   FOR EACH ROW EXECUTE FUNCTION public.update_follow_counts();
 
--- 6. Set up Row Level Security (RLS)
+CREATE TRIGGER social_connection_updated_at_trigger
+  BEFORE UPDATE ON public.social_connections
+  FOR EACH ROW EXECUTE FUNCTION public.update_social_connection_updated_at();
+
+CREATE TRIGGER chat_request_updated_at_trigger
+  BEFORE UPDATE ON public.chat_requests
+  FOR EACH ROW EXECUTE FUNCTION public.update_social_connection_updated_at();
+
+CREATE TRIGGER user_preferences_updated_at_trigger
+  BEFORE UPDATE ON public.user_preferences
+  FOR EACH ROW EXECUTE FUNCTION public.update_social_connection_updated_at();
+
+-- 5. RLS
+
 ALTER TABLE public.schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.school_roles ENABLE ROW LEVEL SECURITY;
@@ -336,22 +467,25 @@ ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resource_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.oauth_states ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.social_connections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.social_imports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
 
--- 7. Create RLS Policies
--- Public read access
+-- 6. Policies
+
 CREATE POLICY "Allow public read access on schools" ON public.schools FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on resources" ON public.resources FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on resource_categories" ON public.resource_categories FOR SELECT USING (true);
 CREATE POLICY "Students can view public profiles" ON public.students FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated read access on events" ON public.events FOR SELECT USING (auth.role() = 'authenticated');
 
-
--- Users can manage their own data
 CREATE POLICY "Users can update their own profile" ON public.students FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can view school roles" ON public.school_roles FOR SELECT USING (true);
 CREATE POLICY "Users can insert their own school roles" ON public.school_roles FOR INSERT WITH CHECK (auth.uid() = student_id);
@@ -364,17 +498,15 @@ CREATE POLICY "Users can manage their own follows" ON public.student_follows FOR
 CREATE POLICY "Users can read their own notifications" ON public.notifications FOR SELECT USING (auth.uid() = recipient_id);
 CREATE POLICY "Users can manage their own reports" ON public.reports FOR ALL USING (auth.uid() = reporter_id);
 
--- School-based read access for posts
 CREATE POLICY "Students can read posts from same school" ON public.posts FOR SELECT USING (
   EXISTS (
-    SELECT 1 FROM public.students s1
-    JOIN public.students s2 ON s1.school_id = s2.school_id
-    WHERE s1.id = auth.uid()
-      AND s2.id = posts.author_id
+    SELECT 1 FROM public.students viewer
+    JOIN public.students author ON author.id = posts.author_id
+    WHERE viewer.id = auth.uid()
+      AND (viewer.school_id = author.school_id OR viewer.school_id IS NULL OR author.school_id IS NULL)
   )
 );
 
--- Users can view media on posts they can see (same school)
 CREATE POLICY "Users can view media on accessible posts" ON public.media FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.posts p
@@ -385,12 +517,10 @@ CREATE POLICY "Users can view media on accessible posts" ON public.media FOR SEL
   )
 );
 
--- Authenticated users can manage posts, comments, likes
 CREATE POLICY "Authenticated users can create posts" ON public.posts FOR INSERT WITH CHECK (auth.uid() = author_id);
 CREATE POLICY "Users can update their own posts" ON public.posts FOR UPDATE USING (auth.uid() = author_id);
 CREATE POLICY "Users can delete their own posts" ON public.posts FOR DELETE USING (auth.uid() = author_id);
 
--- Users can view comments on posts they can see (same school)
 CREATE POLICY "Users can view comments on accessible posts" ON public.comments FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.posts p
@@ -404,7 +534,6 @@ CREATE POLICY "Authenticated users can create comments" ON public.comments FOR I
 CREATE POLICY "Users can update their own comments" ON public.comments FOR UPDATE USING (auth.uid() = author_id);
 CREATE POLICY "Users can delete their own comments" ON public.comments FOR DELETE USING (auth.uid() = author_id);
 
--- Users can view likes on posts they can see (same school)
 CREATE POLICY "Users can view likes on accessible posts" ON public.likes FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.posts p
@@ -417,57 +546,99 @@ CREATE POLICY "Users can view likes on accessible posts" ON public.likes FOR SEL
 CREATE POLICY "Authenticated users can like posts" ON public.likes FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own likes" ON public.likes FOR DELETE USING (auth.uid() = user_id);
 
--- Chat policies
--- Users can view chats they're participants in (check via chat_participants, but avoid recursion by checking student_id directly)
+-- Chat policies (consolidated: base + CHAT_DM_POLICIES)
 CREATE POLICY "Chat members can view chat and participants" ON public.chats FOR SELECT USING (
   id IN (SELECT chat_id FROM public.chat_participants WHERE student_id = auth.uid())
   OR created_by = auth.uid()
 );
 
--- Chat participants policies (avoid recursion - only check direct conditions)
--- SELECT: Users can see their own participation records
--- For seeing other participants, we rely on the chats SELECT policy when fetching chats with relations
+CREATE POLICY "Users can create chats" ON public.chats FOR INSERT TO authenticated WITH CHECK (created_by = auth.uid());
+
+CREATE POLICY "Participants can delete chats" ON public.chats FOR DELETE USING (
+  id IN (SELECT chat_id FROM public.chat_participants WHERE student_id = auth.uid())
+);
+
+CREATE POLICY "Participants can update group chat details" ON public.chats FOR UPDATE USING (
+  id IN (SELECT chat_id FROM public.chat_participants WHERE student_id = auth.uid())
+);
+
+-- Chat requests: requester creates; recipient accepts/declines
+CREATE POLICY "Users can view own chat requests" ON public.chat_requests FOR SELECT USING (
+  requester_id = auth.uid() OR recipient_id = auth.uid()
+);
+CREATE POLICY "Users can create chat requests" ON public.chat_requests FOR INSERT WITH CHECK (
+  requester_id = auth.uid() AND recipient_id <> auth.uid()
+);
+CREATE POLICY "Recipients can update chat requests" ON public.chat_requests FOR UPDATE USING (
+  recipient_id = auth.uid()
+);
+
 CREATE POLICY "Users can view chat participants" ON public.chat_participants FOR SELECT USING (
-  student_id = auth.uid()
+  chat_id IN (SELECT public.get_my_chat_ids())
 );
 
--- INSERT: Users can add themselves (chat creators can add via direct SQL if needed)
 CREATE POLICY "Users can add chat participants" ON public.chat_participants FOR INSERT WITH CHECK (
-  student_id = auth.uid()
+  EXISTS (SELECT 1 FROM public.chats c WHERE c.id = chat_id AND c.created_by = auth.uid())
+  OR EXISTS (SELECT 1 FROM public.chat_participants cp WHERE cp.chat_id = chat_participants.chat_id AND cp.student_id = auth.uid())
 );
 
--- UPDATE: Not typically needed (primary key), but allow if managing own participation
-CREATE POLICY "Users can update chat participants" ON public.chat_participants FOR UPDATE USING (
-  student_id = auth.uid()
-);
+CREATE POLICY "Users can update chat participants" ON public.chat_participants FOR UPDATE USING (student_id = auth.uid());
 
--- DELETE: Users can remove themselves
 CREATE POLICY "Users can remove chat participants" ON public.chat_participants FOR DELETE USING (
   student_id = auth.uid()
+  OR EXISTS (SELECT 1 FROM public.chats c WHERE c.id = chat_participants.chat_id AND c.created_by = auth.uid())
 );
 
--- Messages policies
 CREATE POLICY "Chat members can read messages" ON public.messages FOR SELECT USING (
   chat_id IN (SELECT chat_id FROM public.chat_participants WHERE student_id = auth.uid())
   OR chat_id IN (SELECT id FROM public.chats WHERE created_by = auth.uid())
 );
+
 CREATE POLICY "Chat members can send messages" ON public.messages FOR INSERT WITH CHECK (
-  auth.uid() = author_id 
+  auth.uid() = author_id
   AND (
     chat_id IN (SELECT chat_id FROM public.chat_participants WHERE student_id = auth.uid())
     OR chat_id IN (SELECT id FROM public.chats WHERE created_by = auth.uid())
   )
 );
 
--- 8. Add Performance Indexes
+-- Social connections policies
+CREATE POLICY "Users can view their own social connections" ON public.social_connections FOR SELECT USING (auth.uid() = student_id);
+CREATE POLICY "Users can create their own social connections" ON public.social_connections FOR INSERT WITH CHECK (auth.uid() = student_id);
+CREATE POLICY "Users can update their own social connections" ON public.social_connections FOR UPDATE USING (auth.uid() = student_id);
+CREATE POLICY "Users can delete their own social connections" ON public.social_connections FOR DELETE USING (auth.uid() = student_id);
+
+CREATE POLICY "Users can view their social imports" ON public.social_imports FOR SELECT USING (
+  connection_id IN (SELECT id FROM public.social_connections WHERE student_id = auth.uid())
+);
+CREATE POLICY "Users can create their social imports" ON public.social_imports FOR INSERT WITH CHECK (
+  connection_id IN (SELECT id FROM public.social_connections WHERE student_id = auth.uid())
+);
+CREATE POLICY "Users can delete their social imports" ON public.social_imports FOR DELETE USING (
+    connection_id IN (SELECT id FROM public.social_connections WHERE student_id = auth.uid())
+);
+
+CREATE POLICY "Users can view their own preferences" ON public.user_preferences FOR SELECT USING (auth.uid() = student_id);
+CREATE POLICY "Users can insert their own preferences" ON public.user_preferences FOR INSERT WITH CHECK (auth.uid() = student_id);
+CREATE POLICY "Users can update their own preferences" ON public.user_preferences FOR UPDATE USING (auth.uid() = student_id);
+
+-- 7. Indexes
+
 CREATE INDEX idx_students_school ON public.students(school_id);
 CREATE INDEX idx_posts_author ON public.posts(author_id);
 CREATE INDEX idx_comments_post ON public.comments(post_id);
 CREATE INDEX idx_comments_author ON public.comments(author_id);
 CREATE INDEX idx_likes_post ON public.likes(post_id);
 CREATE INDEX idx_messages_chat ON public.messages(chat_id);
+CREATE INDEX idx_chat_requests_recipient_status ON public.chat_requests(recipient_id, status);
 CREATE INDEX idx_notifications_recipient ON public.notifications(recipient_id);
 CREATE INDEX idx_resources_event_name ON public.resources(event_name);
--- GIN indexes for jsonb columns
 CREATE INDEX idx_students_awards ON public.students USING GIN (awards);
 CREATE INDEX idx_students_interests ON public.students USING GIN (interests);
+
+CREATE INDEX idx_oauth_states_expires ON public.oauth_states(expires_at);
+CREATE INDEX idx_social_connections_student ON public.social_connections(student_id);
+CREATE INDEX idx_social_connections_platform ON public.social_connections(platform);
+CREATE INDEX idx_social_imports_connection ON public.social_imports(connection_id);
+CREATE INDEX idx_social_imports_post ON public.social_imports(post_id);
+CREATE INDEX idx_user_preferences_student_id ON public.user_preferences(student_id);

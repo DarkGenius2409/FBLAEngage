@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { InlineSpinner } from '@/components/ui/native-spinner';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function SignInPage() {
   const navigate = useNavigate();
@@ -185,7 +185,7 @@ export default function SignInPage() {
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <InlineSpinner className="border-primary-foreground" />
+                  <Spinner className="size-4 text-primary-foreground" />
                   Signing in...
                 </span>
               ) : 'Sign In'}

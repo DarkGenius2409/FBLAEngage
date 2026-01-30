@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { InlineSpinner } from '@/components/ui/native-spinner';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -288,7 +288,7 @@ export default function SignUpPage() {
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <InlineSpinner className="border-primary-foreground" />
+                    <Spinner className="size-4 text-primary-foreground" />
                     Creating account...
                   </span>
                 ) : 'Create Account'}

@@ -107,6 +107,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Min 44×44px touch target for interactive elements */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Prevent text selection on long press */
 .no-select {
   -webkit-user-select: none;
@@ -451,11 +462,13 @@
 
 .vh-ios {
   height: 100vh;
+  height: 100dvh;
   height: -webkit-fill-available;
 }
 
 .min-vh-ios {
   min-height: 100vh;
+  min-height: 100dvh;
   min-height: -webkit-fill-available;
 }
 
@@ -619,5 +632,33 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* ============================================================================
+   Prefers Reduced Motion
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner-native,
+  .native-spinner,
+  .material-spinner,
+  .pulse-native,
+  .native-skeleton {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .native-button:active,
+  .ios-button-press:active {
+    transition: none;
+  }
+
+  .native-transition,
+  .native-fade-in,
+  .native-slide-up,
+  .native-scale-in {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

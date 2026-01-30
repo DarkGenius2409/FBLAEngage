@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { Spinner } from '@/components/ui/native-spinner';
+import { Spinner } from '@/components/ui/spinner';
 
 interface LoadingSpinnerProps {
   title: string;
@@ -11,7 +11,7 @@ export function LoadingSpinner({ title, subtitle, size = 'md' }: LoadingSpinnerP
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[50vh] space-y-4 native-fade-in">
       <div className="relative">
-        <Spinner size={size} />
+        <Spinner className={size === 'sm' ? 'size-5' : size === 'md' ? 'size-6' : 'size-8'} />
         <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1" />
       </div>
       <div className="text-center space-y-1">
