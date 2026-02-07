@@ -383,6 +383,7 @@ export interface Resource {
   description: string | null;
   type: ResourceType;
   url: string | null;
+  storage_path?: string | null; // Path in resources bucket (e.g., Accounting/guidelines.pdf)
   event_name: string | null; // Links to FBLA event name
   category_id: string | null;
   downloads: number;
@@ -396,6 +397,7 @@ export interface ResourceInsert {
   description?: string | null;
   type: ResourceType;
   url?: string | null;
+  storage_path?: string | null;
   event_name?: string | null;
   category_id?: string | null;
   downloads?: number;
@@ -408,6 +410,7 @@ export interface ResourceUpdate {
   description?: string | null;
   type?: ResourceType;
   url?: string | null;
+  storage_path?: string | null;
   event_name?: string | null;
   category_id?: string | null;
   downloads?: number;

@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import type { ChatWithRelations } from '@/lib/models';
 
@@ -27,12 +27,16 @@ export function ChatListItem({ chat, currentUserId, onClick }: ChatListItemProps
     return chat.type === 'group' ? 'Group Chat' : 'School Chat';
   };
 
-  const getChatAvatar = () => {
+  const getChatAvatarData = () => {
     if (chat.type === 'direct' && chat.participants) {
       const otherParticipant = chat.participants.find((p) => p.student_id !== currentUserId);
-      return otherParticipant?.student?.name ? getInitials(otherParticipant.student.name) : 'U';
+      const name = otherParticipant?.student?.name;
+      return {
+        initials: name ? getInitials(name) : 'U',
+        image: otherParticipant?.student?.image ?? null,
+      };
     }
-    return chat.type === 'group' ? 'GC' : 'SC';
+    return { initials: chat.type === 'group' ? 'GC' : 'SC', image: null };
   };
 
   const getLastMessage = () => {
@@ -51,6 +55,8 @@ export function ChatListItem({ chat, currentUserId, onClick }: ChatListItemProps
     }
   };
 
+  const chatAvatarData = getChatAvatarData();
+
   return (
     <Card
       className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-2xl"
@@ -58,7 +64,10 @@ export function ChatListItem({ chat, currentUserId, onClick }: ChatListItemProps
     >
       <div className="flex items-center gap-3">
         <Avatar className="w-12 h-12 bg-primary text-primary-foreground flex items-center justify-center">
-          {getChatAvatar()}
+          {chatAvatarData.image ? (
+            <AvatarImage src={chatAvatarData.image} alt="" />
+          ) : null}
+          <AvatarFallback>{chatAvatarData.initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">

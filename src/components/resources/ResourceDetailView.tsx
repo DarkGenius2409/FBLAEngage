@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink } from 'lucide-react';
 import { MobileHeader } from './MobileHeader';
+import { getResourceUrl } from '@/lib/supabase';
+import { openUrl } from '@/lib/capacitor';
 import type { ResourceWithCategory } from '@/lib/models';
 
 interface ResourceDetailViewProps {
@@ -86,11 +88,11 @@ export function ResourceDetailView({ resource, onBack, onDownload }: ResourceDet
           <Download className="h-5 w-5 mr-2" />
           {resource.type === 'link' ? 'Open Link' : 'Download'}
         </Button>
-        {resource.type === 'link' && resource.url && (
+        {resource.type === 'link' && getResourceUrl(resource) && (
           <Button
             variant="outline"
             className="w-full h-12 text-base touch-manipulation"
-            onClick={() => window.open(resource.url!, '_blank')}
+            onClick={() => openUrl(getResourceUrl(resource)!)}
           >
             <ExternalLink className="h-5 w-5 mr-2" />
             Open in New Tab

@@ -66,7 +66,9 @@ function HeaderSearchResults({
             className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/60 active:bg-muted transition-colors touch-manipulation"
           >
             <Avatar className="h-9 w-9 shrink-0 rounded-full bg-primary text-primary-foreground text-xs">
-              <AvatarImage src={s.image ?? undefined} alt={s.name} />
+              {s.image ? (
+                <AvatarImage src={s.image} alt={s.name} />
+              ) : null}
               <AvatarFallback>{getInitials(s.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
@@ -103,9 +105,20 @@ export default function Layout() {
   const currentPath = location.pathname;
   const isHome = currentPath === '/';
   const isCalendar = currentPath === '/calendar';
-  const isResources = currentPath === '/resources';
+  const isResources = currentPath === '/resources' || currentPath.startsWith('/resources/');
   const isChat = currentPath === '/chat';
-  const showBackInHeader = currentPath === '/profile/edit' || currentPath === '/profile/accessibility';
+  const showBackInHeader =
+    currentPath === '/profile/edit' ||
+    currentPath === '/profile/accessibility' ||
+    currentPath === '/resources/ai-test/take' ||
+    currentPath === '/resources/ai-test/results';
+
+  const getBackDestination = () => {
+    if (currentPath.startsWith('/resources/')) return '/resources';
+    if (currentPath === '/profile/edit' || currentPath === '/profile/accessibility')
+      return '/profile';
+    return '/';
+  };
 
   const handleSignOut = async () => {
     try {
@@ -121,33 +134,40 @@ export default function Layout() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
-      {/* App Header - brand bar with optional back arrow */}
+      {/* App Header - blue bar from top (under dynamic island) through header */}
       <header
         className="flex-shrink-0 bg-primary text-primary-foreground border-b z-50"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
       >
-        <div className="container mx-auto px-4 h-12 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="relative flex h-10 w-full items-center justify-between gap-2 px-4">
+          <div className="flex shrink-0 items-center gap-2">
             {showBackInHeader && (
               <Button
                 variant="ghost"
                 size="icon"
                 className="shrink-0 text-primary-foreground hover:bg-white/10 -ml-2"
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate(getBackDestination())}
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             )}
-            <div
-              className="flex items-center gap-3 cursor-pointer min-w-0"
+            <button
+              type="button"
               onClick={() => navigate('/')}
+              className="flex shrink-0 cursor-pointer items-center gap-2 touch-manipulation bg-transparent border-0 p-0 text-left"
             >
-              <div className="w-8 h-8 bg-accent rounded-md flex items-center justify-center shrink-0">
-                <span className="text-accent-foreground text-sm font-semibold">FB</span>
-              </div>
-              <span className="font-semibold truncate">FBLA Engage</span>
-            </div>
+              <img
+                src="/brand-icon.png"
+                alt=""
+                className="h-8 w-8 shrink-0 object-contain"
+                width={32}
+                height={32}
+              />
+              <span className="font-semibold text-primary-foreground">FBLA Engage</span>
+            </button>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Popover open={searchOpen} onOpenChange={setSearchOpen}>
@@ -225,7 +245,7 @@ export default function Layout() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="h-full"
+            className="min-h-full"
           >
             <Outlet />
           </motion.div>
@@ -270,7 +290,7 @@ export default function Layout() {
                 className="flex flex-col items-center gap-1 h-auto py-2 px-3"
                 onClick={() => navigate('/?post=true')}
               >
-                <div className={`rounded-full p-2 ${isHome ? 'bg-accent text-accent-foreground' : 'bg-primary text-primary-foreground'}`}>
+                <div className="rounded-full p-2 bg-primary text-primary-foreground">
                   <Plus className="h-5 w-5" />
                 </div>
                 <span className="text-xs text-muted-foreground">Post</span>

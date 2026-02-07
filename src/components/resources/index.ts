@@ -8,4 +8,5 @@ export { EmptyState } from './EmptyState';
 export { ResourceDetailView } from './ResourceDetailView';
 export { ResourcesListView } from './ResourcesListView';
 export { AITestGeneratorView } from './AITestGeneratorView';
+export { AITestTakeView } from './AITestTakeView';
 export { ChatbotView } from './ChatbotView';

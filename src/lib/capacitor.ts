@@ -11,7 +11,7 @@ export async function initCapacitor() {
     try {
       // Configure Status Bar
       await StatusBar.setStyle({ style: Style.Dark });
-      await StatusBar.setBackgroundColor({ color: '#0a2e4e' });
+      await StatusBar.setBackgroundColor({ color: '#032A87' });
 
       // Hide splash screen after app is ready
       await SplashScreen.hide();
@@ -81,4 +81,22 @@ export function isNativePlatform(): boolean {
  */
 export function getPlatform(): 'ios' | 'android' | 'web' {
   return Capacitor.getPlatform() as 'ios' | 'android' | 'web';
+}
+
+/**
+ * Open a URL (e.g. for PDF download or external link).
+ * On native: uses Capacitor Browser (in-app browser with share/save).
+ * On web: uses window.open.
+ */
+export async function openUrl(url: string): Promise<void> {
+  if (!url || !url.startsWith('http')) {
+    console.warn('openUrl: invalid or missing protocol');
+    return;
+  }
+  if (Capacitor.isNativePlatform()) {
+    const { Browser } = await import('@capacitor/browser');
+    await Browser.open({ url });
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 }

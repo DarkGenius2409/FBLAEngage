@@ -1,20 +1,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { MobileHeader } from "./MobileHeader";
 import { LoadingSpinner } from "./LoadingSpinner";
-import { generateTestQuestions } from "@/lib/gemini";
+import { generateMultipleChoiceQuestions } from "@/lib/gemini";
+import type { MultipleChoiceQuestion } from "@/lib/gemini";
 import { FBLA_EVENTS } from "@/lib/fblaEvents";
+
+const QUESTION_COUNTS = [5, 10, 15, 20] as const;
 
 interface AITestGeneratorViewProps {
   onBack: () => void;
+  onTestGenerated: (questions: MultipleChoiceQuestion[], eventName: string) => void;
 }
 
-export function AITestGeneratorView({ onBack }: AITestGeneratorViewProps) {
+export function AITestGeneratorView({ onBack, onTestGenerated }: AITestGeneratorViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [eventCategoryFilter, setEventCategoryFilter] = useState<string>("all");
-  const [generatedQuestions, setGeneratedQuestions] = useState<string[]>([]);
+  const [questionCount, setQuestionCount] = useState<number>(10);
   const [isGenerating, setIsGenerating] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
 
@@ -28,14 +32,12 @@ export function AITestGeneratorView({ onBack }: AITestGeneratorViewProps) {
 
     setIsGenerating(true);
     setTestError(null);
-    setGeneratedQuestions([]);
 
     try {
-      const event = FBLA_EVENTS.find((e) => e.name === selectedEvent);
-      const eventName = event?.name || "";
+      const eventName = selectedEvent;
 
-      const questions = await generateTestQuestions(eventName || "FBLA", eventName);
-      setGeneratedQuestions(questions);
+      const questions = await generateMultipleChoiceQuestions(eventName, questionCount);
+      onTestGenerated(questions, eventName);
     } catch (error) {
       console.error("Error generating test questions:", error);
       setTestError(
@@ -48,33 +50,19 @@ export function AITestGeneratorView({ onBack }: AITestGeneratorViewProps) {
     }
   };
 
-  const handleExport = () => {
-    const text = generatedQuestions.join("\n\n");
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const eventName = selectedEvent || "FBLA";
-    a.download = `FBLA_Test_${eventName.replace(/\s+/g, "_")}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="absolute inset-0 bg-background flex flex-col">
       <MobileHeader title="AI Test Generator" onBack={onBack} />
 
-      <div className="flex-1 overflow-y-auto momentum-scroll">
-        {isGenerating ? (
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <LoadingSpinner
-              title="Generating Test Questions"
-              subtitle={`AI is creating personalized questions for ${selectedEvent || "your event"}...`}
-            />
-          </div>
-        ) : (
+      {isGenerating ? (
+        <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+          <LoadingSpinner
+            title="Generating Test Questions"
+            subtitle={`AI is creating personalized questions for ${selectedEvent || "your event"}...`}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto momentum-scroll">
           <div className="px-4 py-6">
             {/* Header Card */}
             <div className="bg-card border border-border rounded-xl p-6 mb-8">
@@ -155,6 +143,28 @@ export function AITestGeneratorView({ onBack }: AITestGeneratorViewProps) {
                     </div>
                   </div>
                 )}
+
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-3">
+                    Number of Questions
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    {QUESTION_COUNTS.map((count) => (
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => setQuestionCount(count)}
+                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                          questionCount === count
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -183,52 +193,11 @@ export function AITestGeneratorView({ onBack }: AITestGeneratorViewProps) {
               </div>
             )}
 
-            {/* Generated Questions */}
-            {generatedQuestions.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-base font-semibold text-foreground">
-                    Generated Questions
-                  </h3>
-                  <Badge className="bg-primary/10 text-primary">
-                    {generatedQuestions.length} questions
-                  </Badge>
-                </div>
-
-                <div className="space-y-4">
-                  {generatedQuestions.map((question, index) => (
-                    <div
-                      key={index}
-                      className="bg-card border border-border p-5 rounded-xl"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center">
-                          {index + 1}
-                        </span>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed flex-1">
-                          {question}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-base rounded-xl mt-4"
-                  onClick={handleExport}
-                >
-                  <Download className="h-5 w-5 mr-2" />
-                  Export Questions
-                </Button>
-              </div>
-            )}
-
             {/* Bottom spacing */}
             <div className="h-8" />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

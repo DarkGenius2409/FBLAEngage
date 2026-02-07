@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import type { ChatRequestWithRequester } from '@/lib/models';
 
@@ -29,7 +29,10 @@ export function ChatRequestListItem({
     <Card className="p-5 rounded-2xl border min-h-14 flex flex-col justify-center">
       <div className="flex items-center gap-4">
         <Avatar className="w-12 h-12 bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-          {initials}
+          {request.requester?.image ? (
+            <AvatarImage src={request.requester.image} alt={name} />
+          ) : null}
+          <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{name}</p>

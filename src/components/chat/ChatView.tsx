@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Send, Video, Phone, MoreVertical, Loader2 } from 'lucide-react';
 import { useChatMessages } from '@/hooks';
 import { supabase } from '@/lib/supabase';
@@ -62,13 +62,17 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
     return chat.type === 'group' ? 'Group Chat' : 'School Chat';
   };
 
-  const getChatAvatar = () => {
-    if (!chat) return 'CH';
+  const getChatAvatarData = () => {
+    if (!chat) return { initials: 'CH', image: null as string | null };
     if (chat.type === 'direct' && chat.participants) {
       const otherParticipant = chat.participants.find((p) => p.student_id !== currentUserId);
-      return otherParticipant?.student?.name ? getInitials(otherParticipant.student.name) : 'U';
+      const name = otherParticipant?.student?.name;
+      return {
+        initials: name ? getInitials(name) : 'U',
+        image: otherParticipant?.student?.image ?? null,
+      };
     }
-    return chat.type === 'group' ? 'GC' : 'SC';
+    return { initials: chat.type === 'group' ? 'GC' : 'SC', image: null };
   };
 
   const handleSendMessage = async () => {
@@ -99,6 +103,8 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
     );
   }
 
+  const chatAvatarData = getChatAvatarData();
+
   return (
     <div className="absolute inset-0 flex flex-col bg-background">
       {/* Chat Header - Navy with safe area */}
@@ -111,7 +117,10 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Avatar className="w-10 h-10 bg-white/20 text-primary-foreground flex items-center justify-center shrink-0">
-            {getChatAvatar()}
+            {chatAvatarData.image ? (
+              <AvatarImage src={chatAvatarData.image} alt="" />
+            ) : null}
+            <AvatarFallback>{chatAvatarData.initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <h3 className="font-medium truncate">{getChatName()}</h3>
@@ -143,7 +152,10 @@ export function ChatView({ chatId, currentUserId, onBack, onVideoCall }: ChatVie
             >
               {!isOwn && (
                 <Avatar className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center rounded-full text-xs shrink-0">
-                  {getInitials(authorName)}
+                  {message.author?.image ? (
+                    <AvatarImage src={message.author.image} alt={authorName} />
+                  ) : null}
+                  <AvatarFallback>{getInitials(authorName)}</AvatarFallback>
                 </Avatar>
               )}
               <div className={`max-w-[70%] ${isOwn ? 'order-2' : 'order-1'}`}>

@@ -1,25 +1,33 @@
-import * as React from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Card } from '@/components/ui/card';
+import * as React from "react";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
-import { useUserPreferences } from '@/hooks';
-import { useNavigate } from 'react-router-dom';
-import { Spinner } from '@/components/ui/spinner';
-import type { UserPreferences, UserPreferencesUpdate, ThemeMode } from '@/lib/models';
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserPreferences } from "@/hooks";
+import { useNavigate } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+import type {
+  UserPreferences,
+  UserPreferencesUpdate,
+  ThemeMode,
+} from "@/lib/models";
 
-export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
-export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+export type FontSize = "small" | "medium" | "large" | "extra-large";
+export type ColorBlindMode =
+  | "none"
+  | "protanopia"
+  | "deuteranopia"
+  | "tritanopia";
 
 export interface AccessibilitySettings {
   theme: ThemeMode;
@@ -32,39 +40,41 @@ export interface AccessibilitySettings {
 }
 
 const defaultSettings: AccessibilitySettings = {
-  theme: 'light',
-  fontSize: 'medium',
+  theme: "light",
+  fontSize: "medium",
   highContrast: false,
   reducedMotion: false,
   screenReader: false,
   keyboardNavigation: false,
-  colorBlindMode: 'none',
+  colorBlindMode: "none",
 };
 
 const themeLabels: Record<ThemeMode, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  'high-contrast': 'High contrast',
+  light: "Light",
+  dark: "Dark",
+  "high-contrast": "High contrast",
 };
 
 const fontSizeLabels: Record<FontSize, string> = {
-  small: 'Small',
-  medium: 'Medium',
-  large: 'Large',
-  'extra-large': 'Extra Large',
+  small: "Small",
+  medium: "Medium",
+  large: "Large",
+  "extra-large": "Extra Large",
 };
 
 const colorBlindModeLabels: Record<ColorBlindMode, string> = {
-  none: 'None',
-  protanopia: 'Protanopia (Red-Blind)',
-  deuteranopia: 'Deuteranopia (Green-Blind)',
-  tritanopia: 'Tritanopia (Blue-Blind)',
+  none: "None",
+  protanopia: "Protanopia (Red-Blind)",
+  deuteranopia: "Deuteranopia (Green-Blind)",
+  tritanopia: "Tritanopia (Blue-Blind)",
 };
 
-function preferencesToSettings(prefs: UserPreferences | null): AccessibilitySettings {
+function preferencesToSettings(
+  prefs: UserPreferences | null,
+): AccessibilitySettings {
   if (!prefs) return defaultSettings;
   return {
-    theme: prefs.theme ?? 'light',
+    theme: prefs.theme ?? "light",
     fontSize: prefs.font_size,
     highContrast: prefs.high_contrast,
     reducedMotion: prefs.reduced_motion,
@@ -77,21 +87,30 @@ function preferencesToSettings(prefs: UserPreferences | null): AccessibilitySett
 export default function AccessibilitySettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { preferences, loading, updatePreferences } = useUserPreferences(user?.id || null);
+  const { preferences, loading, updatePreferences } = useUserPreferences(
+    user?.id || null,
+  );
   const currentSettings = preferencesToSettings(preferences);
 
   const handleSettingChange = React.useCallback<
-    <K extends keyof AccessibilitySettings>(key: K, value: AccessibilitySettings[K]) => void
+    <K extends keyof AccessibilitySettings>(
+      key: K,
+      value: AccessibilitySettings[K],
+    ) => void
   >(
     async (key, value) => {
       const update: UserPreferencesUpdate = {};
-      if (key === 'theme') update.theme = value as ThemeMode;
-      else if (key === 'fontSize') update.font_size = value as FontSize;
-      else if (key === 'highContrast') update.high_contrast = value as boolean;
-      else if (key === 'reducedMotion') update.reduced_motion = value as boolean;
-      else if (key === 'screenReader') update.screen_reader_optimized = value as boolean;
-      else if (key === 'keyboardNavigation') update.keyboard_navigation_enhanced = value as boolean;
-      else if (key === 'colorBlindMode') update.color_blind_mode = value as ColorBlindMode;
+      if (key === "theme") update.theme = value as ThemeMode;
+      else if (key === "fontSize") update.font_size = value as FontSize;
+      else if (key === "highContrast") update.high_contrast = value as boolean;
+      else if (key === "reducedMotion")
+        update.reduced_motion = value as boolean;
+      else if (key === "screenReader")
+        update.screen_reader_optimized = value as boolean;
+      else if (key === "keyboardNavigation")
+        update.keyboard_navigation_enhanced = value as boolean;
+      else if (key === "colorBlindMode")
+        update.color_blind_mode = value as ColorBlindMode;
 
       const fullUpdate: UserPreferencesUpdate = {
         theme: currentSettings.theme,
@@ -105,14 +124,14 @@ export default function AccessibilitySettingsPage() {
       };
       const { error } = await updatePreferences(fullUpdate);
       if (error) {
-        toast.error('Failed to update accessibility settings', {
+        toast.error("Failed to update accessibility settings", {
           description: error.message,
         });
       } else {
-        toast.success('Accessibility settings updated');
+        toast.success("Accessibility settings updated");
       }
     },
-    [currentSettings, updatePreferences]
+    [currentSettings, updatePreferences],
   );
 
   if (loading) {
@@ -128,15 +147,9 @@ export default function AccessibilitySettingsPage() {
     <div className="container mx-auto px-4 py-6 max-w-4xl pb-20">
       {/* Header */}
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/profile')}
-          className="mb-4 -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Profile
-        </Button>
-        <h1 className="text-2xl font-semibold text-foreground mb-2">Accessibility Settings</h1>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">
+          Accessibility Settings
+        </h1>
         <p className="text-sm text-muted-foreground">
           Customize your app experience to match your accessibility needs.
         </p>
@@ -146,12 +159,17 @@ export default function AccessibilitySettingsPage() {
         <div className="space-y-8">
           {/* Theme / Color mode */}
           <div className="space-y-3">
-            <Label htmlFor="theme" className="text-base sm:text-sm text-foreground font-medium">
+            <Label
+              htmlFor="theme"
+              className="text-base sm:text-sm text-foreground font-medium"
+            >
               Color mode
             </Label>
             <Select
               value={currentSettings.theme}
-              onValueChange={(value: ThemeMode) => handleSettingChange('theme', value)}
+              onValueChange={(value: ThemeMode) =>
+                handleSettingChange("theme", value)
+              }
             >
               <SelectTrigger
                 id="theme"
@@ -174,12 +192,17 @@ export default function AccessibilitySettingsPage() {
 
           {/* Font Size */}
           <div className="space-y-3">
-            <Label htmlFor="font-size" className="text-base sm:text-sm text-foreground font-medium">
+            <Label
+              htmlFor="font-size"
+              className="text-base sm:text-sm text-foreground font-medium"
+            >
               Font Size
             </Label>
             <Select
               value={currentSettings.fontSize}
-              onValueChange={(value: FontSize) => handleSettingChange('fontSize', value)}
+              onValueChange={(value: FontSize) =>
+                handleSettingChange("fontSize", value)
+              }
             >
               <SelectTrigger
                 id="font-size"
@@ -200,7 +223,10 @@ export default function AccessibilitySettingsPage() {
           {/* Reduced Motion */}
           <div className="flex flex-row items-center justify-between gap-4 py-4">
             <div className="flex-1 min-w-0 space-y-1">
-              <Label htmlFor="reduced-motion" className="text-base sm:text-sm font-medium">
+              <Label
+                htmlFor="reduced-motion"
+                className="text-base sm:text-sm font-medium"
+              >
                 Reduced Motion
               </Label>
               <p className="text-sm text-muted-foreground">
@@ -210,7 +236,9 @@ export default function AccessibilitySettingsPage() {
             <Switch
               id="reduced-motion"
               checked={currentSettings.reducedMotion}
-              onCheckedChange={(checked) => handleSettingChange('reducedMotion', checked)}
+              onCheckedChange={(checked) =>
+                handleSettingChange("reducedMotion", checked)
+              }
               className="flex-shrink-0"
             />
           </div>
@@ -218,7 +246,10 @@ export default function AccessibilitySettingsPage() {
           {/* Screen Reader */}
           <div className="flex flex-row items-center justify-between gap-4 py-4">
             <div className="flex-1 min-w-0 space-y-1">
-              <Label htmlFor="screen-reader" className="text-base sm:text-sm font-medium">
+              <Label
+                htmlFor="screen-reader"
+                className="text-base sm:text-sm font-medium"
+              >
                 Screen Reader
               </Label>
               <p className="text-sm text-muted-foreground">
@@ -228,7 +259,9 @@ export default function AccessibilitySettingsPage() {
             <Switch
               id="screen-reader"
               checked={currentSettings.screenReader}
-              onCheckedChange={(checked) => handleSettingChange('screenReader', checked)}
+              onCheckedChange={(checked) =>
+                handleSettingChange("screenReader", checked)
+              }
               className="flex-shrink-0"
             />
           </div>
@@ -236,7 +269,10 @@ export default function AccessibilitySettingsPage() {
           {/* Keyboard Navigation */}
           <div className="flex flex-row items-center justify-between gap-4 py-4">
             <div className="flex-1 min-w-0 space-y-1">
-              <Label htmlFor="keyboard-nav" className="text-base sm:text-sm font-medium">
+              <Label
+                htmlFor="keyboard-nav"
+                className="text-base sm:text-sm font-medium"
+              >
                 Keyboard Navigation
               </Label>
               <p className="text-sm text-muted-foreground">
@@ -246,20 +282,25 @@ export default function AccessibilitySettingsPage() {
             <Switch
               id="keyboard-nav"
               checked={currentSettings.keyboardNavigation}
-              onCheckedChange={(checked) => handleSettingChange('keyboardNavigation', checked)}
+              onCheckedChange={(checked) =>
+                handleSettingChange("keyboardNavigation", checked)
+              }
               className="flex-shrink-0"
             />
           </div>
 
           {/* Color Blind Mode */}
           <div className="space-y-3">
-            <Label htmlFor="color-blind-mode" className="text-base sm:text-sm text-foreground font-medium">
+            <Label
+              htmlFor="color-blind-mode"
+              className="text-base sm:text-sm text-foreground font-medium"
+            >
               Color Blind Mode
             </Label>
             <Select
               value={currentSettings.colorBlindMode}
               onValueChange={(value: ColorBlindMode) =>
-                handleSettingChange('colorBlindMode', value)
+                handleSettingChange("colorBlindMode", value)
               }
             >
               <SelectTrigger
@@ -269,11 +310,13 @@ export default function AccessibilitySettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(colorBlindModeLabels) as ColorBlindMode[]).map((mode) => (
-                  <SelectItem key={mode} value={mode}>
-                    {colorBlindModeLabels[mode]}
-                  </SelectItem>
-                ))}
+                {(Object.keys(colorBlindModeLabels) as ColorBlindMode[]).map(
+                  (mode) => (
+                    <SelectItem key={mode} value={mode}>
+                      {colorBlindModeLabels[mode]}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground leading-relaxed mt-2">

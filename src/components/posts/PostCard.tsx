@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
-import { ThumbsUp, MessageSquare, Share2, FileText } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ThumbsUp, MessageSquare, Share2, FileText, Loader2 } from 'lucide-react';
 import { usePostLikes, usePostComments } from '@/hooks';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentsSection } from './CommentsSection';
@@ -17,8 +17,13 @@ interface PostCardProps {
 export function PostCard({ post, currentUserId }: PostCardProps) {
   const navigate = useNavigate();
   const { isLiked, toggleLike, likeCount } = usePostLikes(post.id);
-  const { commentCount } = usePostComments(post.id);
-  const [showComments, setShowComments] = useState(false);
+  const {
+    comments,
+    commentCount,
+    loading: commentsLoading,
+    createComment,
+  } = usePostComments(post.id);
+  const [commentsRequested, setCommentsRequested] = useState(false);
   const authorId = post.author?.id;
 
   const handleLike = async () => {
@@ -45,6 +50,10 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
 
   const liked = currentUserId ? isLiked(currentUserId) : false;
 
+  const handleCommentsClick = () => {
+    setCommentsRequested((prev) => !prev);
+  };
+
   return (
     <Card className="overflow-hidden">
       {/* Post Header - clickable to go to author profile */}
@@ -55,7 +64,12 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
           className="flex items-start gap-3 w-full text-left hover:opacity-90 transition-opacity rounded-lg -m-2 p-2"
         >
           <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-full text-sm shrink-0">
-            {post.author ? getInitials(post.author.name) : 'U'}
+            {post.author?.image ? (
+              <AvatarImage src={post.author.image} alt={post.author.name} />
+            ) : null}
+            <AvatarFallback>
+              {post.author ? getInitials(post.author.name) : 'U'}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold">{post.author?.name || 'Unknown'}</h4>
@@ -121,7 +135,13 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
       <div className="px-4 pb-3 flex items-center justify-between text-xs text-muted-foreground">
         <button className="hover:underline">{likeCount} likes</button>
         <div className="flex gap-3">
-          <button className="hover:underline" onClick={() => setShowComments(!showComments)}>
+          <button
+            className="hover:underline flex items-center gap-1.5"
+            onClick={handleCommentsClick}
+          >
+            {commentsRequested && commentsLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : null}
             {commentCount} comments
           </button>
         </div>
@@ -143,9 +163,13 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
           variant="ghost"
           size="sm"
           className="flex items-center gap-2 text-xs h-9"
-          onClick={() => setShowComments(!showComments)}
+          onClick={handleCommentsClick}
         >
-          <MessageSquare className="h-4 w-4" />
+          {commentsRequested && commentsLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <MessageSquare className="h-4 w-4" />
+          )}
           Comment
         </Button>
         <Button variant="ghost" size="sm" className="flex items-center gap-2 text-xs h-9">
@@ -154,10 +178,16 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
         </Button>
       </div>
 
-      {/* Comments Section */}
-      {showComments && (
+      {/* Comments Section - only expands after comments are loaded */}
+      {commentsRequested && !commentsLoading && (
         <div className="border-t px-4 py-3 bg-muted/30">
-          <CommentsSection postId={post.id} currentUserId={currentUserId} />
+          <CommentsSection
+            postId={post.id}
+            currentUserId={currentUserId}
+            comments={comments}
+            loading={commentsLoading}
+            createComment={createComment}
+          />
         </div>
       )}
     </Card>

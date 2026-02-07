@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   MapPin,
   Briefcase,
@@ -17,6 +17,7 @@ import {
 import { TikTokIcon } from "@/components/TikTokIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudent, useFollows } from "@/hooks";
+import { FollowingItem } from "@/components/profile";
 import { supabase } from "@/lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
@@ -39,10 +40,10 @@ export default function ProfilePage() {
     : profileOwnerFollows.following;
   const followingCount = isOwnProfile
     ? currentUserFollows.followingCount
-    : (student?.following_count ?? profileOwnerFollows.followingCount);
+    : profileOwnerFollows.followingCount;
   const followersCount = isOwnProfile
     ? currentUserFollows.followersCount
-    : (student?.follower_count ?? profileOwnerFollows.followersCount);
+    : profileOwnerFollows.followersCount;
 
   const [isInstagramSynced, setIsInstagramSynced] = useState(false);
   const [isTikTokSynced, setIsTikTokSynced] = useState(false);
@@ -130,7 +131,10 @@ export default function ProfilePage() {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16 bg-primary text-primary-foreground flex items-center justify-center text-xl rounded-full">
-              {getInitials(student.name)}
+              {student.image ? (
+                <AvatarImage src={student.image} alt={student.name} />
+              ) : null}
+              <AvatarFallback>{getInitials(student.name)}</AvatarFallback>
             </Avatar>
             <div>
               <h2 className="text-xl font-semibold mb-1">{student.name}</h2>
@@ -203,14 +207,26 @@ export default function ProfilePage() {
           <div className="text-2xl font-semibold mb-1">{postCount}</div>
           <div className="text-xs text-muted-foreground">Posts</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-semibold mb-1">{followersCount}</div>
-          <div className="text-xs text-muted-foreground">Followers</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-semibold mb-1">{followingCount}</div>
-          <div className="text-xs text-muted-foreground">Following</div>
-        </Card>
+        <button
+          type="button"
+          onClick={() => navigate(`/profile/${profileStudentId}/followers`)}
+          className="text-left"
+        >
+          <Card className="p-4 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+            <div className="text-2xl font-semibold mb-1">{followersCount}</div>
+            <div className="text-xs text-muted-foreground">Followers</div>
+          </Card>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate(`/profile/${profileStudentId}/following`)}
+          className="text-left"
+        >
+          <Card className="p-4 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+            <div className="text-2xl font-semibold mb-1">{followingCount}</div>
+            <div className="text-xs text-muted-foreground">Following</div>
+          </Card>
+        </button>
       </div>
 
       {/* Accessibility Settings - own profile only */}
@@ -381,6 +397,17 @@ export default function ProfilePage() {
           <h3 className="text-lg font-semibold">
             Following ({followingCount})
           </h3>
+          {followingCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                navigate(`/profile/${profileStudentId}/following`)
+              }
+            >
+              See all
+            </Button>
+          )}
         </div>
         {following.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -396,43 +423,6 @@ export default function ProfilePage() {
           </div>
         )}
       </Card>
-    </div>
-  );
-}
-function FollowingItem({ studentId }: { studentId: string }) {
-  const { student } = useStudent(studentId);
-  const navigate = useNavigate();
-
-  if (!student) return null;
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors">
-      <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-full text-sm">
-        {getInitials(student.name)}
-      </Avatar>
-      <div className="flex-1">
-        <h4 className="text-sm font-medium">{student.name}</h4>
-        <p className="text-xs text-muted-foreground">
-          {student.school_roles?.[0]?.role || "Member"} •{" "}
-          {student.school?.name || "No Chapter"}
-        </p>
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate(`/profile/${studentId}`)}
-      >
-        <span className="text-xs">View</span>
-      </Button>
     </div>
   );
 }

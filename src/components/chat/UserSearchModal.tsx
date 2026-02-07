@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useStudentSearch } from "@/hooks/useStudentSearch";
 import type { Student } from "@/lib/models";
 import { Search, Loader2 } from "lucide-react";
@@ -137,7 +137,10 @@ export function UserSearchModal({
                     }`}
                   >
                     <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                      {getInitials(s.name)}
+                      {s.image ? (
+                        <AvatarImage src={s.image} alt={s.name} />
+                      ) : null}
+                      <AvatarFallback>{getInitials(s.name)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{s.name}</p>

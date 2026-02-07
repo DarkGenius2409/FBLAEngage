@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Briefcase, MapPin, Settings } from 'lucide-react';
 import type { StudentWithRelations } from '@/lib/models';
 
@@ -27,7 +27,10 @@ export function ProfileHeader({ student }: ProfileHeaderProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-4">
           <Avatar className="w-16 h-16 bg-primary text-primary-foreground flex items-center justify-center text-xl rounded-full">
-            {getInitials(student.name)}
+            {student.image ? (
+              <AvatarImage src={student.image} alt={student.name} />
+            ) : null}
+            <AvatarFallback>{getInitials(student.name)}</AvatarFallback>
           </Avatar>
           <div>
             <h2 className="text-xl font-semibold mb-1">{student.name}</h2>

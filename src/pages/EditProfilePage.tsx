@@ -129,7 +129,7 @@ export default function EditProfilePage() {
       const schoolId =
         school == null || school === ""
           ? null
-          : (schoolsFromApi.find((s) => s.name === school)?.id ?? null);
+          : schoolsFromApi.find((s) => s.name === school)?.id ?? null;
       const updates = {
         bio: bio.trim() || null,
         school_id: schoolId,
@@ -181,19 +181,11 @@ export default function EditProfilePage() {
     <div className="min-h-full h-full bg-background flex flex-col">
       {/* Page title (back is in Layout brand bar) */}
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/profile")}
-          className="mb-4 -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Profile
-        </Button>
         <h1 className="text-2xl font-semibold text-foreground mb-2">
-          Accessibility Settings
+          Edit Profile
         </h1>
         <p className="text-sm text-muted-foreground">
-          Customize your app experience to match your accessibility needs.
+          Edit your profile information.
         </p>
       </div>
 

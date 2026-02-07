@@ -1,4 +1,6 @@
-# Database Seeding Script
+# FBLA Engage Scripts
+
+## Database Seeding
 
 Single comprehensive script for seeding, verifying, and managing test data.
 
@@ -165,9 +167,54 @@ The script uses fixed seeds (`Faker.seed(42)`, `random.seed(42)`) for determinis
 - ✅ Summary of created data
 - ✅ Non-destructive by default (use --reset flag for cleanup)
 
+---
+
+## Event Guidelines Scraper
+
+**Script:** `scripts/scrape_event_guidelines.py`
+
+Scrapes official FBLA event guideline PDFs from connect.fbla.org and uploads them to Supabase Storage in event-specific folders (`resources/{EventName}/guidelines.pdf`).
+
+### Setup
+
+```bash
+pip install -r scripts/requirements.txt
+```
+
+Ensure `.env` has `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+
+### Usage
+
+```bash
+# Dry run (fetch only, no upload)
+python scripts/scrape_event_guidelines.py --dry-run
+
+# Scrape and upload all events
+python scripts/scrape_event_guidelines.py
+
+# Specific events only
+python scripts/scrape_event_guidelines.py --events "Accounting,Advanced Accounting,Introduction to FBLA"
+
+# List all events
+python scripts/scrape_event_guidelines.py --list-events
+```
+
+### Storage
+
+Creates bucket `resources` (public) with one folder per event, e.g.:
+
+**If you see "Bucket not found" when downloading PDFs**, create the bucket first:
+```bash
+python scripts/create_resources_bucket.py
+```
+- `resources/Accounting/guidelines.pdf`
+- `resources/Introduction to FBLA/guidelines.pdf`
+
+---
+
 ## Customization
 
-Edit `seed_database.py` to customize:
+Edit `seed.py` to customize:
 - Number of schools, students, posts, etc.
 - FBLA event selection
 - Content templates

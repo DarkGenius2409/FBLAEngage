@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useStudent } from '@/hooks';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,7 +25,10 @@ export function FollowingItem({ studentId }: FollowingItemProps) {
   return (
     <div className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors">
       <Avatar className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-full text-sm">
-        {getInitials(student.name)}
+        {student.image ? (
+          <AvatarImage src={student.image} alt={student.name} />
+        ) : null}
+        <AvatarFallback>{getInitials(student.name)}</AvatarFallback>
       </Avatar>
       <div className="flex-1">
         <h4 className="text-sm font-medium">{student.name}</h4>

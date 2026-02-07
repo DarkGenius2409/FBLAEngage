@@ -9,8 +9,11 @@ import CalendarPage from '@/pages/CalendarPage';
 import ResourcesPage from '@/pages/ResourcesPage';
 import ChatPage from '@/pages/ChatPage';
 import ProfilePage from '@/pages/ProfilePage';
+import FollowListPage from '@/pages/FollowListPage';
 import EditProfilePage from '@/pages/EditProfilePage';
 import AccessibilitySettingsPage from '@/pages/AccessibilitySettingsPage';
+import TestResultsPage from '@/pages/TestResultsPage';
+import TestTakePage from '@/pages/TestTakePage';
 import SignInPage from '@/pages/SignInPage';
 import SignUpPage from '@/pages/SignUpPage';
 import { useUserPreferences } from '@/hooks';
@@ -76,7 +79,11 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/edit" element={<EditProfilePage />} />
         <Route path="/profile/accessibility" element={<AccessibilitySettingsPage />} />
+        <Route path="/profile/:studentId/followers" element={<FollowListPage />} />
+        <Route path="/profile/:studentId/following" element={<FollowListPage />} />
         <Route path="/profile/:studentId" element={<ProfilePage />} />
+        <Route path="/resources/ai-test/take" element={<TestTakePage />} />
+        <Route path="/resources/ai-test/results" element={<TestResultsPage />} />
       </Route>
 
       {/* Catch all - redirect to home */}

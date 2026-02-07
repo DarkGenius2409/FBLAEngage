@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { SearchBar, EventCard, AIFeatureCard, EmptyState } from '@/components/resources';
 import { Sparkles, MessageSquare, FileText } from 'lucide-react';
 import { useResources } from '@/hooks';
+import { getResourceUrl } from '@/lib/supabase';
+import { openUrl } from '@/lib/capacitor';
 import type { ResourceWithCategory } from '@/lib/models';
 import { FBLA_EVENTS } from '@/lib/fblaEvents';
 import {
@@ -28,11 +31,20 @@ const slideTransition = {
 };
 
 export default function ResourcesPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<View>('main');
   const [selectedEventName, setSelectedEventName] = useState<string | null>(null);
   const [selectedResource, setSelectedResource] = useState<ResourceWithCategory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter] = useState<string>('all');
+  useEffect(() => {
+    const state = location.state as { openAITestGen?: boolean } | null;
+    if (state?.openAITestGen) {
+      setCurrentView('ai-test-gen');
+      window.history.replaceState({}, '', '/resources');
+    }
+  }, [location.state]);
 
   // Fetch resources for selected event (or all if on main view)
   const eventNameForResources = currentView === 'main' ? null : selectedEventName;
@@ -63,8 +75,9 @@ export default function ResourcesPage() {
 
   const handleDownload = async (resource: ResourceWithCategory) => {
     await incrementDownloads(resource.id);
-    if (resource.url) {
-      window.open(resource.url, '_blank');
+    const url = getResourceUrl(resource);
+    if (url) {
+      await openUrl(url);
     }
   };
 
@@ -200,7 +213,14 @@ export default function ResourcesPage() {
             transition={slideTransition}
             className="fixed inset-0 z-50"
           >
-            <AITestGeneratorView onBack={() => setCurrentView('main')} />
+            <AITestGeneratorView
+              onBack={() => setCurrentView('main')}
+              onTestGenerated={(questions, eventName) => {
+                navigate('/resources/ai-test/take', {
+                  state: { questions, eventName },
+                });
+              }}
+            />
           </motion.div>
         )}
 

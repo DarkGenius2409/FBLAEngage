@@ -11,7 +11,48 @@ export function useFollows(studentId: string | null) {
   useEffect(() => {
     if (studentId) {
       fetchFollows();
+    } else {
+      setFollowing([]);
+      setFollowers([]);
+      setLoading(false);
     }
+  }, [studentId]);
+
+  // Real-time subscription for followers/following changes
+  useEffect(() => {
+    if (!studentId) return;
+
+    const channel = supabase
+      .channel(`student_follows:${studentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'student_follows',
+          filter: `follower_id=eq.${studentId}`,
+        },
+        () => {
+          fetchFollows();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'student_follows',
+          filter: `following_id=eq.${studentId}`,
+        },
+        () => {
+          fetchFollows();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [studentId]);
 
   const fetchFollows = async () => {

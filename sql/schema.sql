@@ -240,6 +240,7 @@ CREATE TABLE "public"."resources" (
     "description" text,
     "type" resource_type NOT NULL,
     "url" text,
+    "storage_path" text,
     "event_name" text,
     "category_id" uuid,
     "downloads" integer DEFAULT 0,
@@ -494,6 +495,7 @@ CREATE POLICY "Users can delete their own school roles" ON public.school_roles F
 CREATE POLICY "Authenticated users can view event registrations" ON public.event_registrations FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Users can insert their own event registrations" ON public.event_registrations FOR INSERT WITH CHECK (auth.uid() = student_id);
 CREATE POLICY "Users can delete their own event registrations" ON public.event_registrations FOR DELETE USING (auth.uid() = student_id);
+CREATE POLICY "Authenticated users can view follow relationships" ON public.student_follows FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Users can manage their own follows" ON public.student_follows FOR ALL USING (auth.uid() = follower_id);
 CREATE POLICY "Users can read their own notifications" ON public.notifications FOR SELECT USING (auth.uid() = recipient_id);
 CREATE POLICY "Users can manage their own reports" ON public.reports FOR ALL USING (auth.uid() = reporter_id);

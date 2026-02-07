@@ -129,8 +129,14 @@ export default function SignUpPage() {
             </Link>
             <div className="text-center space-y-4">
               <div className="flex justify-center">
-                <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-primary-foreground text-3xl font-bold">FB</span>
+                <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg p-3 border border-border overflow-hidden">
+                  <img
+                    src="/brand-icon.png"
+                    alt="FBLA Engage"
+                    width={56}
+                    height={56}
+                    className="size-14 shrink-0 object-contain aspect-square"
+                  />
                 </div>
               </div>
               <div>

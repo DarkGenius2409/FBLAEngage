@@ -16,7 +16,7 @@ export function usePosts(schoolId?: string | null) {
       setLoading(true);
       setError(null);
 
-      let query = supabase
+      const query = supabase
         .from('posts')
         .select(`
           *,
@@ -25,24 +25,11 @@ export function usePosts(schoolId?: string | null) {
         `)
         .order('created_at', { ascending: false });
 
-      // If schoolId is provided, filter by school
-      if (schoolId) {
-        // Note: We'll filter after fetching since Supabase doesn't support nested filtering easily
-        // For better performance, consider adding a view or function
-      }
-
       const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
-      let filteredData = (data as PostWithRelations[]) || [];
-      
-      // Filter by school if schoolId is provided
-      if (schoolId) {
-        filteredData = filteredData.filter(post => post.author?.school_id === schoolId);
-      }
-
-      setPosts(filteredData);
+      setPosts((data as PostWithRelations[]) || []);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch posts'));
       console.error('Error fetching posts:', err);
